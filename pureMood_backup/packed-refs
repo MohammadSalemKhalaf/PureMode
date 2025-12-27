@@ -1,0 +1,7 @@
+# pack-refs with: peeled fully-peeled sorted 
+02ec7fc2837c9718d6e94a87977fd2da794de546 refs/heads/aseel
+f77b6352e1541f867d0ad32d63d98ba3b3911b35 refs/heads/main
+d3fa333979ffb0d1cc77dbc4666f3d6ae9156484 refs/remotes/origin/HEAD
+20f628d790aa1b6162f9b80497a2064bb9261089 refs/remotes/origin/aseel
+d3fa333979ffb0d1cc77dbc4666f3d6ae9156484 refs/remotes/origin/main
+65b81d434c3961dc4bda9f3e03a3d1f795334a31 refs/remotes/origin/tasneem

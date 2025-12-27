@@ -1,0 +1,247 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../models/assessment_models.dart';
+import '../screenss/assessments_screen.dart';
+
+/// Shows assessment reminder dialog if there are due assessments
+Future<void> showAssessmentReminderIfNeeded(
+  BuildContext context,
+  List<AssessmentSchedule> schedules,
+) async {
+  // Filter for due assessments
+  final dueAssessments = schedules.where((schedule) {
+    return schedule.isDue;
+  }).toList();
+
+  if (dueAssessments.isEmpty) {
+    return; // No due assessments
+  }
+
+  // Show reminder dialog
+  await showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context) {
+      return AssessmentReminderDialog(dueAssessments: dueAssessments);
+    },
+  );
+}
+
+class AssessmentReminderDialog extends StatelessWidget {
+  final List<AssessmentSchedule> dueAssessments;
+
+  const AssessmentReminderDialog({
+    Key? key,
+    required this.dueAssessments,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
+      elevation: 8,
+      child: Container(
+        constraints: BoxConstraints(maxWidth: 400),
+        padding: EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.purple.shade50, Colors.white],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.purple.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.psychology_outlined,
+                size: 48,
+                color: Colors.purple.shade700,
+              ),
+            ),
+            SizedBox(height: 20),
+
+            // Title
+            Text(
+              'Assessment Reminder',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF4A148C),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 12),
+
+            // Message
+            Text(
+              dueAssessments.length == 1
+                  ? 'You have 1 assessment due!'
+                  : 'You have ${dueAssessments.length} assessments due!',
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Colors.grey.shade700,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20),
+
+            // Assessment List
+            Container(
+              constraints: BoxConstraints(maxHeight: 200),
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: dueAssessments.length,
+                itemBuilder: (context, index) {
+                  final assessment = dueAssessments[index];
+                  return _buildAssessmentItem(assessment);
+                },
+              ),
+            ),
+            SizedBox(height: 24),
+
+            // Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Later',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AssessmentsScreen(),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF9C27B0),
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                    ),
+                    child: Text(
+                      'Take Now',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAssessmentItem(AssessmentSchedule assessment) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.purple.shade100),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.assignment_outlined,
+            color: Colors.purple.shade700,
+            size: 20,
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _getAssessmentDisplayName(assessment.assessmentType),
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF4A148C),
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'Every ${assessment.intervalDays} days',
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              'Due',
+              style: GoogleFonts.poppins(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: Colors.orange.shade700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getAssessmentDisplayName(String assessmentType) {
+    switch (assessmentType.toLowerCase()) {
+      case 'phq9':
+        return 'Depression Assessment (PHQ-9)';
+      case 'gad7':
+        return 'Anxiety Assessment (GAD-7)';
+      case 'pss':
+        return 'Stress Assessment (PSS)';
+      case 'isi':
+        return 'Insomnia Assessment (ISI)';
+      default:
+        return assessmentType.toUpperCase();
+    }
+  }
+}

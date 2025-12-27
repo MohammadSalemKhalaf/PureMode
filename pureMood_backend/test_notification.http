@@ -1,0 +1,25 @@
+### اختبار إنشاء إشعار - تسجيل specialist جديد
+POST http://localhost:5000/api/users/register
+Content-Type: application/json
+
+{
+  "name": "د. أحمد محمد",
+  "email": "ahmad.specialist@test.com",
+  "password": "Test123!",
+  "role": "specialist",
+  "age": 32,
+  "gender": "male"
+}
+
+### اختبار إنشاء إشعار - تسجيل admin جديد
+POST http://localhost:5000/api/users/register
+Content-Type: application/json
+
+{
+  "name": "إدارية جديدة",
+  "email": "newadmin@test.com",
+  "password": "Test123!",
+  "role": "admin",
+  "age": 28,
+  "gender": "female"
+}

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "445401180913",
+    "project_id": "puremood",
+    "storage_bucket": "puremood.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:445401180913:android:97170d1b26370d92b29750",
+        "android_client_info": {
+          "package_name": "com.example.puremood_frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhO_AF-YmZuDBB5d_kEShLX2puR3PL0uA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
