@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/booking.dart';
 import '../services/booking_service.dart';
@@ -9,6 +10,8 @@ import 'availability_management_screen.dart';
 import 'specialist_own_profile_screen.dart';
 import 'specialist_earnings_screen.dart';
 import 'login_screen.dart';
+import 'package:flutter/foundation.dart';
+
 
 class SpecialistDashboardScreen extends StatefulWidget {
   const SpecialistDashboardScreen({Key? key}) : super(key: key);
@@ -166,61 +169,233 @@ class _SpecialistDashboardScreenState extends State<SpecialistDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // نجبر حالياً استخدام لياوت الموبايل للتأكد من التصميم
+        final bool isWebLayout = false;
+
+        if (isWebLayout) {
+          return _buildWebLayout();
+        }
+
+        return _buildMobileLayout();
+      },
+    );
+  }
+
+  // ================= MOBILE LAYOUT =================
+  Widget _buildMobileLayout() {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       drawer: _buildDrawer(),
-      appBar: AppBar(
-        title: Text(
-          'Specialist Dashboard',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: const Color(0xFF008080),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.person),
-            tooltip: 'My Profile',
-            onPressed: () {
-              final specialistId = _specialistData?['specialist_id'];
-              if (specialistId != null) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SpecialistOwnProfileScreen(
-                      specialistId: specialistId,
-                    ),
-                  ),
-                ).then((_) => _loadDashboardData());
-              }
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: _loadDashboardData,
-          ),
-        ],
-      ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadDashboardData,
               child: SingleChildScrollView(
-                physics: AlwaysScrollableScrollPhysics(),
+                physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
                   children: [
-                    _buildWelcomeHeader(),
+                    // ===== CUSTOM HEADER =====
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(16, 48, 16, 24),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF008080),
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(28),
+                          bottomRight: Radius.circular(28),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Builder(
+                                builder: (context) => IconButton(
+                                  icon: const Icon(Icons.menu, color: Colors.white),
+                                  onPressed: () => Scaffold.of(context).openDrawer(),
+                                ),
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                icon: const Icon(Icons.refresh, color: Colors.white),
+                                onPressed: _loadDashboardData,
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.person, color: Colors.white),
+                                onPressed: () {
+                                  final id = _specialistData?['specialist_id'];
+                                  if (id != null) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            SpecialistOwnProfileScreen(specialistId: id),
+                                      ),
+                                    ).then((_) => _loadDashboardData());
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Welcome back',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            'Dr. ${_specialistData?['name'] ?? ''}',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          // لا نعرض الإيميل هنا حسب طلبك
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
                     _buildStatsCards(),
                     _buildRecentBookingsSection(),
                     _buildTodaySection(),
                     _buildPendingSection(),
                     _buildQuickActions(),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
             ),
     );
   }
+
+  // ================= WEB LAYOUT (placeholder, to be enhanced later) =================
+  Widget _buildWebLayout() {
+  return Scaffold(
+    backgroundColor: const Color(0xFFF5F6FA),
+    body: Row(
+      children: [
+        // ================= SIDEBAR =================
+        SizedBox(
+          width: 260,
+          child: _buildDrawer(),
+        ),
+
+        // ================= MAIN =================
+        Expanded(
+          child: Column(
+            children: [
+              // ================= TOP BAR =================
+              Container(
+                height: 64,
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF008080),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black12, blurRadius: 4),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      'Dashboard',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.refresh, color: Colors.white),
+                      onPressed: _loadDashboardData,
+                    ),
+                    const SizedBox(width: 12),
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor: Colors.white,
+                      child: const Icon(Icons.person, color: Color(0xFF008080)),
+                    ),
+                  ],
+                ),
+              ),
+
+              // ================= CONTENT =================
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 24,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // ===== WELCOME (خفيف) =====
+                            Text(
+                              'Welcome back, Dr. ${_specialistData?['name'] ?? ''}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // ===== STATS =====
+                            _buildStatsCards(),
+
+                            const SizedBox(height: 32),
+
+                            // ===== GRID =====
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // LEFT CONTENT
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    children: [
+                                      _buildRecentBookingsSection(),
+                                      const SizedBox(height: 24),
+                                      _buildTodaySection(),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(width: 24),
+
+                                // RIGHT CONTENT
+                                Expanded(
+                                  flex: 2,
+                                  child: Column(
+                                    children: [
+                                      _buildPendingSection(),
+                                      const SizedBox(height: 24),
+                                      _buildQuickActions(),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildRecentBookingsSection() {
     if (_recentBookings.isEmpty) {
@@ -321,13 +496,6 @@ class _SpecialistDashboardScreenState extends State<SpecialistDashboardScreen> {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  _specialistData?['email'] ?? '',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.white70,
-                  ),
-                ),
               ],
             ),
           ),
@@ -419,38 +587,38 @@ class _SpecialistDashboardScreenState extends State<SpecialistDashboardScreen> {
 
   Widget _buildWelcomeHeader() {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         boxShadow: const [
           BoxShadow(
             color: Colors.black12,
-            blurRadius: 6,
-            offset: Offset(0, 3),
+            blurRadius: 8,
+            offset: Offset(0, 4),
           ),
         ],
       ),
       child: Row(
         children: [
           CircleAvatar(
-            radius: 30,
-            backgroundColor: const Color(0xFF008080).withOpacity(0.1),
-            backgroundImage: _specialistData != null && _specialistData!['profile_image'] != null
+            radius: 32,
+            backgroundColor: const Color(0xFF008080).withOpacity(0.12),
+            backgroundImage: _specialistData?['profile_image'] != null
                 ? NetworkImage(
                     _specialistData!['profile_image'].toString().startsWith('http')
                         ? _specialistData!['profile_image']
                         : '${ApiConfig.baseUrl.replaceFirst('/api', '')}${_specialistData!['profile_image']}',
                   )
                 : null,
-            child: _specialistData != null && _specialistData!['profile_image'] != null
-                ? null
-                : const Icon(
+            child: _specialistData?['profile_image'] == null
+                ? const Icon(
                     Icons.medical_services,
-                    size: 28,
+                    size: 30,
                     color: Color(0xFF008080),
-                  ),
+                  )
+                : null,
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -460,36 +628,32 @@ class _SpecialistDashboardScreenState extends State<SpecialistDashboardScreen> {
                 Text(
                   'Welcome back',
                   style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Dr. ${_specialistData?['name'] ?? 'Specialist'}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[900],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _specialistData?['email'] ?? '',
-                  style: GoogleFonts.poppins(
                     fontSize: 12,
                     color: Colors.grey[600],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
+                Text(
+                  'Dr. ${_specialistData?['name'] ?? ''}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[900],
+                  ),
+                ),
+                const SizedBox(height: 10),
                 Row(
                   children: [
-                    const Icon(Icons.event_available, size: 16, color: Color(0xFF008080)),
-                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.event_available,
+                      size: 16,
+                      color: Color(0xFF008080),
+                    ),
+                    const SizedBox(width: 6),
                     Text(
                       '$_totalBookings total bookings',
                       style: GoogleFonts.poppins(
-                        fontSize: 12,
+                        fontSize: 13,
                         color: Colors.grey[700],
                       ),
                     ),

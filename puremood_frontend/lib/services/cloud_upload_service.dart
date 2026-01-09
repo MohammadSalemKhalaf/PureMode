@@ -17,7 +17,7 @@ class CloudUploadService {
   }) async {
     try {
       // رابط السيرفر (غيّره لرابط السيرفر تبعك)
-      final url = Uri.parse('http://your-server.com/api/upload');
+  final String baseUrl = 'http://10.0.2.2:5000/api';
       
       var request = http.MultipartRequest('POST', url);
       

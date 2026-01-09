@@ -17,19 +17,13 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for macos - '
@@ -59,4 +53,24 @@ class DefaultFirebaseOptions {
     projectId: 'puremood',
     storageBucket: 'puremood.firebasestorage.app',
   );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyCSmB_G4IcDHgnnbr7yPT-lGqccJXz1eIY',
+    appId: '1:445401180913:web:46370b66b5152e38b29750',
+    messagingSenderId: '445401180913',
+    projectId: 'puremood',
+    authDomain: 'puremood.firebaseapp.com',
+    storageBucket: 'puremood.firebasestorage.app',
+    measurementId: 'G-FZKJLTDNFQ',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyDqe9Lf315TGPHZCaruf1f_fV11LJmK7zc',
+    appId: '1:445401180913:ios:70900f248ae905d3b29750',
+    messagingSenderId: '445401180913',
+    projectId: 'puremood',
+    storageBucket: 'puremood.firebasestorage.app',
+    iosBundleId: 'com.example.puremoodFrontend',
+  );
+
 }

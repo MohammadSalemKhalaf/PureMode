@@ -141,7 +141,18 @@ const login = async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    res.json({ message: "Login successful", token, role: user.role });
+    const safeUser = {
+      user_id: user.user_id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      age: user.age,
+      gender: user.gender,
+      status: user.status,
+      picture: user.picture,
+    };
+
+    res.json({ message: "Login successful", token, role: user.role, user: safeUser });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

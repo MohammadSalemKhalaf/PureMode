@@ -55,6 +55,10 @@ const emailVerificationRoutes = require('./routes/emailVerificationRoutes');
 // AI health check
 app.get('/api/ai/ping', (req, res) => res.json({ ok: true }));
 
+// Legacy-compatible login route: /api/login -> same handler as /api/users/login
+const { login } = require('./controllers/userController');
+app.post('/api/login', login);
+
 // 🔗 Route mounting
 app.use('/api/users', userRoutes);
 app.use('/api/moods', moodRoutes);
