@@ -62,6 +62,14 @@ class BookingChatService {
     }
   }
 
+  Future<BookingChatMessageDto?> getLastMessage(int bookingId) async {
+    final messages = await getMessages(bookingId);
+    if (messages.isEmpty) {
+      return null;
+    }
+    return messages.last;
+  }
+
   Future<BookingChatMessageDto> sendMessage({
     required int bookingId,
     required String content,

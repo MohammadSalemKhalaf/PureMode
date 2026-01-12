@@ -3,6 +3,7 @@ const MoodEntry = require('../models/MoodEntry');
 const CommunityPost = require('../models/CommunityPost');
 const CommunityComment = require('../models/CommunityComment');
 const AssessmentResult = require('../models/AssessmentResult');
+const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
 const sequelize = require('../config/db');
 const { createNotification } = require('./notificationController');
@@ -48,6 +49,46 @@ const getDashboardStats = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+// 👑 Create admin user (admin only)
+const createAdmin = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email, and password are required' });
+    }
+
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      name,
+      email,
+      password_hash: hashedPassword,
+      role: 'admin',
+      status: 'accepted',
+    });
+
+    return res.status(201).json({
+      message: 'Admin created successfully',
+      user: {
+        user_id: user.user_id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+      },
+    });
+  } catch (err) {
+    console.error('Error creating admin:', err);
+    return res.status(500).json({ message: err.message });
   }
 };
 
@@ -274,7 +315,7 @@ const approveSpecialist = async (req, res) => {
     const { specialist_id } = req.params;
     const specialist = await User.findOne({ where: { user_id: specialist_id, role: 'specialist' } });
     if (!specialist) return res.status(404).json({ message: 'Specialist not found' });
-    specialist.status = 'verified';
+    specialist.status = 'accepted';
     await specialist.save();
     await createNotification(
       'specialist_approved',
@@ -315,6 +356,7 @@ module.exports = {
   getDashboardStats,
   getAllUsersAdmin,
   getUserDetails,
+  createAdmin,
   updateUserRoleStatus,
   deleteUserAdmin,
   getAllPostsAdmin,

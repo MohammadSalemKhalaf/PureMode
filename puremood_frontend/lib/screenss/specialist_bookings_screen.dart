@@ -4,7 +4,9 @@ import '../models/booking.dart';
 import '../services/booking_service.dart';
 import '../services/api_service.dart';
 import '../services/refund_service.dart';
+import '../config/api_config.dart';
 import 'patient_specialist_chat_screen.dart';
+import 'patient_mood_history_screen.dart';
 import 'video_call_screen.dart';
 
 class SpecialistBookingsScreen extends StatefulWidget {
@@ -38,6 +40,13 @@ class _SpecialistBookingsScreenState extends State<SpecialistBookingsScreen> wit
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  String? _resolvePicture(String? rawPicture) {
+    if (rawPicture == null || rawPicture.isEmpty) return null;
+    if (rawPicture.startsWith('http')) return rawPicture;
+    final baseHost = ApiConfig.baseUrl.replaceFirst('/api', '');
+    return '$baseHost$rawPicture';
   }
 
   Future<void> _loadBookings() async {
@@ -514,12 +523,36 @@ class _SpecialistBookingsScreenState extends State<SpecialistBookingsScreen> wit
                   Navigator.push(
                     context,
                     MaterialPageRoute(
+                      builder: (_) => PatientMoodHistoryScreen(
+                        patientId: booking.patientId,
+                        patientName: booking.patientName ?? 'Patient',
+                      ),
+                    ),
+                  );
+                },
+                icon: Icon(Icons.insights_outlined, size: 18, color: Colors.indigo),
+                label: Text('Mood History', style: GoogleFonts.poppins(fontSize: 13, color: Colors.indigo)),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: Colors.indigo),
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
                       builder: (_) => PatientSpecialistChatScreen(
                         bookingId: booking.bookingId,
                         patientId: booking.patientId,
                         specialistId: booking.specialistId,
                         title: booking.patientName ?? 'Patient Chat',
                         isPatientView: false,
+                        avatarUrl: _resolvePicture(booking.patientPicture),
                       ),
                     ),
                   );

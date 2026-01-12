@@ -23,6 +23,8 @@ class Booking {
   final String? patientEmail;
   final int? patientAge;
   final String? patientGender;
+  final String? specialistPicture;
+  final String? patientPicture;
 
   Booking({
     required this.bookingId,
@@ -47,6 +49,8 @@ class Booking {
     this.patientEmail,
     this.patientAge,
     this.patientGender,
+    this.specialistPicture,
+    this.patientPicture,
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
@@ -77,6 +81,8 @@ class Booking {
       patientEmail: json['patient_email'],
       patientAge: json['patient_age'],
       patientGender: json['patient_gender'],
+      specialistPicture: json['specialist_picture'],
+      patientPicture: json['patient_picture'],
     );
   }
 

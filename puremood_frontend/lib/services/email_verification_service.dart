@@ -1,22 +1,10 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class EmailVerificationService {
-  // ============================================================
-  // BASE URL (يدعم Web + Mobile بدون تغيير الباك اند)
-  // ============================================================
-  String get baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:5000/api/email';
-    } else {
-      return 'http://10.0.2.2:5000/api/email';
-    }
-  }
+  final String baseUrl = 'http://10.0.2.2:5000/api/email';
 
-  // ============================================================
   // Send verification code to email
-  // ============================================================
   Future<Map<String, dynamic>> sendVerificationCode(String email) async {
     try {
       final res = await http.post(
@@ -43,18 +31,13 @@ class EmailVerificationService {
     }
   }
 
-  // ============================================================
   // Verify the code
-  // ============================================================
   Future<Map<String, dynamic>> verifyCode(String email, String code) async {
     try {
       final res = await http.post(
         Uri.parse('$baseUrl/verify-code'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'code': code,
-        }),
+        body: jsonEncode({'email': email, 'code': code}),
       );
 
       if (res.statusCode == 200) {

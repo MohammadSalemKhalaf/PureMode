@@ -6,6 +6,9 @@ const User = require('../models/User');
 const SpecialistAvailability = require('../models/SpecialistAvailability');
 const { QueryTypes } = require('sequelize');
 const sequelize = require('../config/db');
+const UserFcmToken = require('../models/UserFcmToken');
+const UserNotification = require('../models/UserNotification');
+const { sendPushNotificationToMultiple } = require('../services/firebaseService');
 
 // Ensure one chat session per booking
 exports.getOrCreateSession = async (req, res) => {
@@ -65,6 +68,7 @@ exports.sendMessage = async (req, res) => {
     const { bookingId } = req.params;
     const { content } = req.body;
     const role = req.user.role; // 'patient' or 'specialist'
+    const senderUserId = req.user.user_id;
 
     if (!content || !content.trim()) {
       return res.status(400).json({ error: 'Message content is required' });
@@ -91,6 +95,91 @@ exports.sendMessage = async (req, res) => {
       sender_role: role === 'patient' ? 'patient' : 'specialist',
       content: content.trim(),
     });
+
+    const notificationTitleBase =
+      role === 'patient' ? 'New message from your patient' : 'New message from your specialist';
+    const notificationBody =
+      content.length > 120 ? content.substring(0, 117) + '...' : content;
+
+    // ==============================
+    // Send FCM push notification
+    // ==============================
+    try {
+      let recipientUserId = null;
+
+      // Determine recipient user_id
+      if (role === 'patient') {
+        // Sender is patient, recipient is specialist (mapped to user_id)
+        const specialist = await Specialist.findByPk(session.specialist_id);
+        if (specialist && specialist.user_id) {
+          recipientUserId = specialist.user_id;
+        }
+      } else if (role === 'specialist') {
+        // Sender is specialist, recipient is patient (user_id stored directly)
+        recipientUserId = session.patient_id;
+      }
+
+      if (recipientUserId && recipientUserId !== senderUserId) {
+        const senderUser = await User.findByPk(senderUserId, { attributes: ['name'] });
+        const senderName = senderUser?.name ? senderUser.name : 'Someone';
+        const notificationTitle = `${notificationTitleBase}: ${senderName}`;
+
+        try {
+          await UserNotification.create({
+            user_id: recipientUserId,
+            type: 'chat_message',
+            title_ar: notificationTitle,
+            title_en: notificationTitle,
+            message_ar: notificationBody,
+            message_en: notificationBody,
+            data: {
+              booking_id: bookingId,
+              session_id: session.id,
+              sender_role: role === 'patient' ? 'patient' : 'specialist',
+              sender_user_id: senderUserId,
+            },
+            status: 'sent',
+            sent_at: new Date(),
+          });
+        } catch (logError) {
+          console.error('Error logging chat notification:', logError);
+        }
+
+        const activeTokens = await UserFcmToken.findAll({
+          where: {
+            user_id: recipientUserId,
+            is_active: true,
+          },
+        });
+
+        const fcmTokens = activeTokens
+          .map((t) => t.fcm_token)
+          .filter((token) => !!token);
+
+        if (fcmTokens.length > 0) {
+          await sendPushNotificationToMultiple(
+            fcmTokens,
+            {
+              title: notificationTitle,
+              body: notificationBody,
+            },
+            {
+              type: 'chat_message',
+              booking_id: String(bookingId),
+              sender_role: role === 'patient' ? 'patient' : 'specialist',
+              session_id: String(session.id),
+            }
+          );
+        } else {
+          console.log(`No active FCM tokens found for user ${recipientUserId}, skipping chat push notification.`);
+        }
+      } else {
+        console.log('Recipient user ID not resolved or equals sender, skipping chat push notification.');
+      }
+    } catch (notifyError) {
+      console.error('Error sending chat push notification:', notifyError);
+      // Do not fail the main request if notification fails
+    }
 
     return res.status(201).json({ session, message });
   } catch (err) {
@@ -179,7 +268,8 @@ exports.getPatientBookings = async (req, res) => {
         s.specialization, 
         s.session_price, 
         u.name as specialist_name, 
-        u.email as specialist_email
+        u.email as specialist_email,
+        u.picture as specialist_picture
       FROM bookings b
       INNER JOIN specialists s ON b.specialist_id = s.specialist_id
       INNER JOIN users u ON s.user_id = u.user_id
@@ -211,7 +301,8 @@ exports.getSpecialistBookings = async (req, res) => {
         u.name as patient_name, 
         u.email as patient_email, 
         u.age as patient_age, 
-        u.gender as patient_gender
+        u.gender as patient_gender,
+        u.picture as patient_picture
       FROM bookings b
       INNER JOIN users u ON b.patient_id = u.user_id
       WHERE b.specialist_id = ?
@@ -243,8 +334,10 @@ exports.getBooking = async (req, res) => {
         s.session_price, 
         u_spec.name as specialist_name, 
         u_spec.email as specialist_email, 
+        u_spec.picture as specialist_picture,
         u_pat.name as patient_name, 
-        u_pat.email as patient_email
+        u_pat.email as patient_email,
+        u_pat.picture as patient_picture
       FROM bookings b
       INNER JOIN specialists s ON b.specialist_id = s.specialist_id
       INNER JOIN users u_spec ON s.user_id = u_spec.user_id

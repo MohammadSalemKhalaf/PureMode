@@ -8,6 +8,7 @@ class PatientSpecialistChatScreen extends StatefulWidget {
   final int specialistId;
   final String title;
   final bool isPatientView; // true when opened by patient, false for specialist
+  final String? avatarUrl;
 
   const PatientSpecialistChatScreen({
     Key? key,
@@ -16,6 +17,7 @@ class PatientSpecialistChatScreen extends StatefulWidget {
     required this.specialistId,
     required this.title,
     required this.isPatientView,
+    this.avatarUrl,
   }) : super(key: key);
 
   @override
@@ -88,6 +90,23 @@ class _PatientSpecialistChatScreenState extends State<PatientSpecialistChatScree
     return senderRole == 'specialist';
   }
 
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  String _dayLabel(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(date.year, date.month, date.day);
+    if (day == today) {
+      return 'Today';
+    }
+    if (day == today.subtract(const Duration(days: 1))) {
+      return 'Yesterday';
+    }
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
   Future<void> _sendMessage() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
@@ -118,13 +137,66 @@ class _PatientSpecialistChatScreenState extends State<PatientSpecialistChatScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+      backgroundColor: const Color(0xFFF4FAF8),
       appBar: AppBar(
-        title: Text(
-          widget.title,
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
         backgroundColor: const Color(0xFF008080),
+        elevation: 0,
+        toolbarHeight: 72,
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: const Color(0xFFD6F1EC),
+              backgroundImage: widget.avatarUrl != null
+                  ? NetworkImage(widget.avatarUrl!)
+                  : null,
+              child: widget.avatarUrl == null
+                  ? Text(
+                      widget.title.isNotEmpty ? widget.title[0].toUpperCase() : '?',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF008080),
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.title,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+                Text(
+                  'Online',
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.videocam_outlined),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: const Icon(Icons.call_outlined),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -145,79 +217,105 @@ class _PatientSpecialistChatScreenState extends State<PatientSpecialistChatScree
                         itemBuilder: (context, index) {
                           final msg = _messages[index];
                           final isMe = msg.isMe;
+                          final showDayHeader = index == 0 ||
+                              !_isSameDay(msg.time, _messages[index - 1].time);
                           final senderLabel = isMe
-                              ? 'You'
-                              : (widget.isPatientView ? 'Specialist' : 'Patient');
+                              ? 'Me'
+                              : (widget.title.isNotEmpty ? widget.title : 'User');
                           final timeFormatted =
                               '${msg.time.hour.toString().padLeft(2, '0')}:${msg.time.minute.toString().padLeft(2, '0')}';
-                          return Align(
-                            alignment:
-                                isMe ? Alignment.centerRight : Alignment.centerLeft,
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 10),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                              constraints: BoxConstraints(
-                                maxWidth:
-                                    MediaQuery.of(context).size.width * 0.75,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isMe
-                                    ? const Color(0xFF008080)
-                                    : Colors.white,
-                                borderRadius: BorderRadius.only(
-                                  topLeft: const Radius.circular(16),
-                                  topRight: const Radius.circular(16),
-                                  bottomLeft: Radius.circular(isMe ? 16 : 4),
-                                  bottomRight: Radius.circular(isMe ? 4 : 16),
+                          return Column(
+                            children: [
+                              if (showDayHeader)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE0F2EF),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: Text(
+                                      _dayLabel(msg.time),
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF008080),
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.06),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
+                              Align(
+                                alignment: isMe
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 10),
+                                  constraints: BoxConstraints(
+                                    maxWidth:
+                                        MediaQuery.of(context).size.width * 0.75,
                                   ),
-                                ],
+                                  decoration: BoxDecoration(
+                                    color: isMe
+                                        ? const Color(0xFF008080)
+                                        : Colors.white,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: const Radius.circular(16),
+                                      topRight: const Radius.circular(16),
+                                      bottomLeft: Radius.circular(isMe ? 16 : 4),
+                                      bottomRight: Radius.circular(isMe ? 4 : 16),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.06),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: isMe
+                                        ? CrossAxisAlignment.end
+                                        : CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        senderLabel,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: isMe
+                                              ? Colors.white.withOpacity(0.9)
+                                              : Colors.grey[700],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        msg.text,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 13,
+                                          color: isMe
+                                              ? Colors.white
+                                              : Colors.black87,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        timeFormatted,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          color: isMe
+                                              ? Colors.white70
+                                              : Colors.grey[500],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                              child: Column(
-                                crossAxisAlignment: isMe
-                                    ? CrossAxisAlignment.end
-                                    : CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    senderLabel,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: isMe
-                                          ? Colors.white.withOpacity(0.9)
-                                          : Colors.grey[700],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    msg.text,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 13,
-                                      color: isMe
-                                          ? Colors.white
-                                          : Colors.black87,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    timeFormatted,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 10,
-                                      color: isMe
-                                          ? Colors.white70
-                                          : Colors.grey[500],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            ],
                           );
                         },
                       ),
@@ -227,6 +325,24 @@ class _PatientSpecialistChatScreenState extends State<PatientSpecialistChatScree
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: const Color(0xFFE5ECF4),
+                    child: IconButton(
+                      icon: const Icon(Icons.attach_file, size: 18, color: Color(0xFF008080)),
+                      onPressed: () {},
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: const Color(0xFFE5ECF4),
+                    child: IconButton(
+                      icon: const Icon(Icons.mic, size: 18, color: Color(0xFF008080)),
+                      onPressed: () {},
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
                       controller: _controller,
@@ -236,11 +352,11 @@ class _PatientSpecialistChatScreenState extends State<PatientSpecialistChatScree
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(18),
                           borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
+                            horizontal: 14, vertical: 10),
                       ),
                     ),
                   ),

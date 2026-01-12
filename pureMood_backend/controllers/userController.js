@@ -28,17 +28,21 @@ const register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Force role: public registration cannot create admins
+    // Only allow specialist registration explicitly; everything else becomes patient
+    const finalRole = role === 'specialist' ? 'specialist' : 'patient';
+
     // تحديد status بناءً على role
-    let status = 'accepted'; // patient افتراضياً مقبول
-    if (role === 'admin' || role === 'specialist') {
-      status = 'pending'; // admin و specialist يحتاجون موافقة
+    let status = 'accepted';
+    if (finalRole === 'specialist') {
+      status = 'pending';
     }
 
     const user = await User.create({
       name,
       email,
       password_hash: hashedPassword,
-      role,
+      role: finalRole,
       age,
       gender,
       status,
@@ -46,7 +50,7 @@ const register = async (req, res) => {
     });
 
     // إذا specialist، أنشئ ملف specialist
-    if (role === 'specialist' && specialistData) {
+    if (finalRole === 'specialist' && specialistData) {
       let parsedSpecialistData = specialistData;
       if (typeof specialistData === 'string') {
         try {
@@ -98,12 +102,12 @@ const register = async (req, res) => {
 
     let message = "User registered successfully";
     if (status === 'pending') {
-      message = role === 'specialist' 
+      message = finalRole === 'specialist' 
         ? "Registration successful! Your specialist account is pending admin approval."
         : "Registration successful! Your account is pending admin approval.";
     }
 
-    res.status(201).json({ message, user_id: user.user_id, status, role });
+    res.status(201).json({ message, user_id: user.user_id, status, role: finalRole });
   } catch (err) {
     console.error('Registration error:', err);
     res.status(500).json({ message: err.message });
@@ -141,18 +145,7 @@ const login = async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    const safeUser = {
-      user_id: user.user_id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      age: user.age,
-      gender: user.gender,
-      status: user.status,
-      picture: user.picture,
-    };
-
-    res.json({ message: "Login successful", token, role: user.role, user: safeUser });
+    res.json({ message: "Login successful", token, role: user.role });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

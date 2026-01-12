@@ -31,6 +31,10 @@ router.get('/users/:userId', adminController.getUserDetails);
 router.put('/users/:userId', adminController.updateUserRoleStatus);
 router.delete('/users/:userId', adminController.deleteUserAdmin);
 
+// ====== Admin Management ======
+router.post('/admins', adminController.createAdmin);
+router.post('/add-admin', adminController.createAdmin);
+
 // ====== Posts Management ======
 router.get('/posts', adminController.getAllPostsAdmin);
 router.delete('/posts/:postId', adminController.deletePostAdmin);

@@ -34,32 +34,76 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     });
   }
 
+  Future<void> _showCreateAdminDialog() async {
+    if (!mounted) return;
+    
+    final result = await showDialog<dynamic>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => _CreateAdminDialog(adminService: _adminService),
+    );
+
+    // انتظار قصير للتأكد من إغلاق الحوار تماماً
+    await Future.delayed(Duration(milliseconds: 100));
+    
+    if (!mounted) return;
+
+    if (result == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Admin created successfully ✅', style: GoogleFonts.poppins()),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    if (result is String && result.trim().isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $result', style: GoogleFonts.poppins()),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
   Future<void> _loadUserInfo() async {
     try {
       final user = await _apiService.getMe();
-      setState(() => userInfo = user);
+      if (mounted) {
+        setState(() => userInfo = user);
+      }
     } catch (e) {
       print('Error loading user info: $e');
     }
   }
 
   Future<void> _loadStats() async {
-    setState(() {
-      loading = true;
-      error = '';
-    });
+    if (mounted) {
+      setState(() {
+        loading = true;
+        error = '';
+      });
+    }
 
     try {
       final response = await _adminService.getDashboardStats();
-      setState(() {
-        stats = response;
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          stats = response;
+          loading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        error = e.toString();
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          error = e.toString();
+          loading = false;
+        });
+      }
     }
   }
 
@@ -89,9 +133,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> _markNotificationsAsRead() async {
     try {
       await _adminService.markAllNotificationsAsRead();
-      setState(() {
-        notificationCount = 0;
-      });
+      if (mounted) {
+        setState(() {
+          notificationCount = 0;
+        });
+      }
       await cancelAdminRegistrationNotification();
     } catch (e) {
       print('Error marking notifications as read: $e');
@@ -332,16 +378,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     // جلب الإشعارات من API
     try {
       final notifs = await _adminService.getNotifications(limit: 5);
-      setState(() {
-        realNotifications = notifs;
-      });
+      if (mounted) {
+        setState(() {
+          realNotifications = notifs;
+        });
+      }
       
       // ✅ تحديد كل الإشعارات كمقروءة تلقائياً عند فتح القائمة
       if (realNotifications.isNotEmpty) {
         await _adminService.markAllNotificationsAsRead();
-        setState(() {
-          notificationCount = 0; // العداد يروح فوراً
-        });
+        if (mounted) {
+          setState(() {
+            notificationCount = 0; // العداد يروح فوراً
+          });
+        }
         await cancelAdminRegistrationNotification();
       }
     } catch (e) {
@@ -503,7 +553,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           isRead: notification['is_read'] ?? false,
           onTap: () {
             Navigator.pop(context);
-            Navigator.pushNamed(context, route);
+            Future.microtask(() {
+              if (!mounted) return;
+              Navigator.pushNamed(this.context, route);
+            });
           },
         );
       },
@@ -1154,6 +1207,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ),
         SizedBox(height: 12),
         _buildActionTile(
+          title: 'Add Admin',
+          subtitle: 'Create a new admin account',
+          icon: Icons.admin_panel_settings_outlined,
+          iconColor: Color(0xFFEF4444),
+          onTap: () => _showCreateAdminDialog(),
+        ),
+        SizedBox(height: 12),
+        _buildActionTile(
           title: 'Moderate Posts',
           subtitle: 'Review community content',
           icon: Icons.article_outlined,
@@ -1421,6 +1482,140 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       final storage = await _apiService.storage;
       await storage.delete(key: 'jwt');
       Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+    }
+  }
+}
+
+class _CreateAdminDialog extends StatefulWidget {
+  final AdminService adminService;
+
+  const _CreateAdminDialog({required this.adminService});
+
+  @override
+  State<_CreateAdminDialog> createState() => _CreateAdminDialogState();
+}
+
+class _CreateAdminDialogState extends State<_CreateAdminDialog> {
+  final _formKey = GlobalKey<FormState>();
+  String _name = '';
+  String _email = '';
+  String _password = '';
+  bool _isSubmitting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Add New Admin', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Name',
+                  border: OutlineInputBorder(),
+                ),
+                enabled: !_isSubmitting,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter the name';
+                  }
+                  return null;
+                },
+                onSaved: (value) => _name = value?.trim() ?? '',
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                enabled: !_isSubmitting,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter the email';
+                  }
+                  if (!value.contains('@')) {
+                    return 'Please enter a valid email';
+                  }
+                  return null;
+                },
+                onSaved: (value) => _email = value?.trim() ?? '',
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                ),
+                obscureText: true,
+                enabled: !_isSubmitting,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the password';
+                  }
+                  if (value.length < 6) {
+                    return 'Password must be at least 6 characters';
+                  }
+                  return null;
+                },
+                onSaved: (value) => _password = value ?? '',
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(false),
+          child: Text('Cancel', style: GoogleFonts.poppins()),
+        ),
+        ElevatedButton(
+          onPressed: _isSubmitting ? null : _submitForm,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF008080),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          child: _isSubmitting
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : Text('Create', style: GoogleFonts.poppins(color: Colors.white)),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    _formKey.currentState!.save();
+    
+    setState(() => _isSubmitting = true);
+
+    try {
+      await widget.adminService.createAdmin(
+        name: _name,
+        email: _email,
+        password: _password,
+      );
+      
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      Navigator.of(context).pop(e.toString());
     }
   }
 }

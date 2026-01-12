@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/refund_service.dart';
+import '../services/notification_service.dart';
 
 /// Dialog to cancel a booking with refund policy details
 class CancelBookingDialog extends StatefulWidget {
@@ -350,6 +351,12 @@ class _CancelBookingDialogState extends State<CancelBookingDialog> {
       );
 
       if (result['success']) {
+        try {
+          await cancelSessionReminders(bookingId: widget.bookingId);
+        } catch (e) {
+          print('Failed to cancel session reminders: $e');
+        }
+
         Navigator.pop(context);
         
         // Show success message

@@ -1,0 +1,56 @@
+# 🧪 اختبار نظام تذكير المزاج
+# Mood Reminder System Testing
+
+### 1. 📋 جلب إشعارات المستخدم
+GET http://localhost:5000/api/user-notifications
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+### 2. 📊 إحصائيات الإشعارات
+GET http://localhost:5000/api/user-notifications/stats
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+### 3. 🔔 إرسال تذكير مزاج يدوي
+POST http://localhost:5000/api/user-notifications/mood-reminder
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+### 4. ⚙️ حالة خدمة التذكير (للأدمن فقط)
+GET http://localhost:5000/api/user-notifications/mood-reminder/settings
+Authorization: Bearer ADMIN_JWT_TOKEN_HERE
+Content-Type: application/json
+
+### 5. ⚙️ تشغيل خدمة التذكير (للأدمن فقط)
+POST http://localhost:5000/api/user-notifications/mood-reminder/start
+Authorization: Bearer ADMIN_JWT_TOKEN_HERE
+Content-Type: application/json
+
+### 6. ⚙️ إيقاف خدمة التذكير (للأدمن فقط)
+POST http://localhost:5000/api/user-notifications/mood-reminder/stop
+Authorization: Bearer ADMIN_JWT_TOKEN_HERE
+Content-Type: application/json
+
+### 7. ⚙️ تغيير فترة التذكير إلى 1 دقيقة (للأدمن فقط)
+PUT http://localhost:5000/api/user-notifications/mood-reminder/interval
+Authorization: Bearer ADMIN_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "interval_minutes": 1
+}
+
+### 8. ✅ تحديد إشعار كمقروء
+PUT http://localhost:5000/api/user-notifications/1/read
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+### 9. ✅ تحديد كل الإشعارات كمقروءة
+PUT http://localhost:5000/api/user-notifications/mark-all-read
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+### 10. 🗑️ حذف إشعار
+DELETE http://localhost:5000/api/user-notifications/1
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json

@@ -170,6 +170,42 @@ class AdminService {
     }
   }
 
+  Future<Map<String, dynamic>> createAdmin({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final token = await _getToken();
+      final endpoints = <String>['admins', 'add-admin'];
+      for (final ep in endpoints) {
+        final response = await http.post(
+          Uri.parse('$baseUrl/$ep'),
+          headers: _getHeaders(token),
+          body: jsonEncode({
+            'name': name,
+            'email': email,
+            'password': password,
+          }),
+        );
+
+        final data = jsonDecode(response.body);
+        if (response.statusCode == 201) {
+          return data;
+        }
+
+        if (response.statusCode != 404) {
+          throw Exception(data['message'] ?? data['error'] ?? 'Failed to create admin');
+        }
+      }
+
+      throw Exception('Failed to create admin');
+    } catch (e) {
+      print('Error creating admin: $e');
+      throw Exception('Failed to create admin: $e');
+    }
+  }
+
   // ====== Get All Users ======
   Future<Map<String, dynamic>> getAllUsers({
     String? role,

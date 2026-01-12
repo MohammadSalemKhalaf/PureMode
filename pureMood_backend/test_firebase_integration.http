@@ -1,0 +1,117 @@
+# 🔥 اختبار تكامل Firebase مع نظام تذكير المزاج
+# Firebase Integration Testing for Mood Reminders
+
+### المتطلبات قبل الاختبار:
+# 1. تأكد أن الخادم يعمل على localhost:5000
+# 2. احصل على JWT token من تسجيل الدخول
+# 3. احصل على FCM token من التطبيق
+# 4. استبدل YOUR_JWT_TOKEN و YOUR_FCM_TOKEN بالقيم الحقيقية
+
+###
+
+### 1. 📱 حفظ FCM token للمستخدم
+POST http://localhost:5000/api/fcm-tokens
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "fcm_token": "cjqLgbFnTce56ZnBthmUso:APA91bHdwSAthNbE4hG9sPMr83LrWeuL3hR1E1-WxkxJz6iF6vBZiM-zSwaoaavOXfuXilCzRiNAzctT8Eh09zAt5aqe4mblg6pMrgAeg6BueOFW-HZUIMM",
+  "device_type": "android",
+  "device_info": "Android Emulator SDK 34"
+}
+
+###
+
+### 2. 🔍 جلب FCM tokens الخاصة بي
+GET http://localhost:5000/api/fcm-tokens
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+###
+
+### 3. 🧪 اختبار إرسال push notification
+POST http://localhost:5000/api/fcm-tokens/test-push
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "fcm_token": "cjqLgbFnTce56ZnBthmUso:APA91bHdwSAthNbE4hG9sPMr83LrWeuL3hR1E1-WxkxJz6iF6vBZiM-zSwaoaavOXfuXilCzRiNAzctT8Eh09zAt5aqe4mblg6pMrgAeg6BueOFW-HZUIMM"
+}
+
+###
+
+### 4. 🔔 إرسال تذكير مزاج يدوي (سيرسل push notification)
+POST http://localhost:5000/api/user-notifications/mood-reminder
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+###
+
+### 5. 📋 جلب إشعارات المستخدم
+GET http://localhost:5000/api/user-notifications
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+###
+
+### 6. 📊 إحصائيات الإشعارات
+GET http://localhost:5000/api/user-notifications/stats
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+###
+
+### 7. ⚙️ حالة خدمة التذكير (للأدمن فقط)
+GET http://localhost:5000/api/user-notifications/mood-reminder/settings
+Authorization: Bearer ADMIN_JWT_TOKEN_HERE
+Content-Type: application/json
+
+###
+
+### 8. 📊 إحصائيات FCM tokens (للأدمن فقط)
+GET http://localhost:5000/api/fcm-tokens/stats
+Authorization: Bearer ADMIN_JWT_TOKEN_HERE
+Content-Type: application/json
+
+###
+
+### 9. 🔕 إيقاف تنشيط FCM token
+PUT http://localhost:5000/api/fcm-tokens/1/deactivate
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+###
+
+### 10. 🗑️ حذف FCM token
+DELETE http://localhost:5000/api/fcm-tokens/1
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+###
+
+### اختبارات متقدمة:
+
+### 11. ⚙️ تشغيل خدمة التذكير يدوياً
+POST http://localhost:5000/api/user-notifications/mood-reminder/start
+Authorization: Bearer ADMIN_JWT_TOKEN_HERE
+Content-Type: application/json
+
+###
+
+### 12. ⚙️ تغيير فترة التذكير إلى 1 دقيقة (للاختبار السريع)
+PUT http://localhost:5000/api/user-notifications/mood-reminder/interval
+Authorization: Bearer ADMIN_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "interval_minutes": 1
+}
+
+###
+
+# ملاحظات مهمة:
+# 1. استبدل YOUR_JWT_TOKEN_HERE برمز تسجيل الدخول الحقيقي
+# 2. استبدل YOUR_FCM_TOKEN_HERE برمز FCM من التطبيق المحمول
+# 3. FCM Token يأتي من console log في التطبيق: "Device Token: ..."
+# 4. للحصول على JWT token، استخدم endpoint تسجيل الدخول أولاً
+# 5. تأكد من تشغيل التطبيق المحمول لاستلام push notifications

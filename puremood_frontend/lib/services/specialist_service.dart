@@ -1,26 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter/foundation.dart'; // ✅ kIsWeb
-
 import '../models/specialist.dart';
 import '../models/appointment.dart';
 
 class SpecialistService {
-  // =========================
-  // BASE URL (Web + Mobile)
-  // =========================
-    String get baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:5000/api';
-    }
-    return 'http://10.0.2.2:5000/api';
-  }
-  final FlutterSecureStorage storage = const FlutterSecureStorage();
+  final String baseUrl = 'http://10.0.2.2:5000/api/specialists';
+  final storage = const FlutterSecureStorage();
 
-  // =========================
-  // TOKEN
-  // =========================
   Future<String?> _getToken() async {
     return await storage.read(key: 'jwt');
   }
@@ -32,9 +19,34 @@ class SpecialistService {
     };
   }
 
-  // =========================
-  // GET ALL SPECIALISTS
-  // =========================
+  Future<List<dynamic>> getPatientMoodEntries(int patientId) async {
+    try {
+      final token = await _getToken();
+      if (token == null) throw Exception('No token found');
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/patients/$patientId/moods'),
+        headers: _getHeaders(token),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['entries'] ?? [];
+      }
+
+      if (response.statusCode == 403) {
+        final data = jsonDecode(response.body);
+        throw Exception(data['error'] ?? 'Not allowed');
+      }
+
+      throw Exception('Failed to load mood entries');
+    } catch (e) {
+      print('Error loading patient mood entries: $e');
+      rethrow;
+    }
+  }
+
+  // ====== Get all specialists with filters ======
   Future<List<Specialist>> getAllSpecialists({
     String? specialization,
     double? minRating,
@@ -44,60 +56,86 @@ class SpecialistService {
     try {
       final token = await _getToken();
 
-      final queryParams = <String, String>{};
-      if (specialization != null) queryParams['specialization'] = specialization;
+      // Build query parameters
+      Map<String, String> queryParams = {};
+      if (specialization != null)
+        queryParams['specialization'] = specialization;
       if (minRating != null) queryParams['minRating'] = minRating.toString();
       if (maxPrice != null) queryParams['maxPrice'] = maxPrice.toString();
-      if (isAvailable != null) {
+      if (isAvailable != null)
         queryParams['isAvailable'] = isAvailable.toString();
-      }
 
-      final uri = Uri.parse('$baseUrl/specialists')
-          .replace(queryParameters: queryParams);
+      final uri = Uri.parse(baseUrl).replace(queryParameters: queryParams);
 
-      final res = await http.get(uri, headers: _getHeaders(token));
+      final response = await http.get(uri, headers: _getHeaders(token));
 
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
         return (data['specialists'] as List)
-            .map((e) => Specialist.fromJson(e))
+            .map((json) => Specialist.fromJson(json))
             .toList();
+      } else {
+        throw Exception('Failed to load specialists');
       }
-
-      throw Exception('Failed to load specialists');
     } catch (e) {
-      debugPrint('Error getting specialists: $e');
+      print('Error getting specialists: $e');
       return [];
     }
   }
 
-  // =========================
-  // GET SPECIALIST BY ID
-  // =========================
+  // ====== Get specialist by ID ======
   Future<Specialist?> getSpecialistById(int specialistId) async {
     try {
       final token = await _getToken();
 
-      final res = await http.get(
-        Uri.parse('$baseUrl/specialists/$specialistId'),
+      final response = await http.get(
+        Uri.parse('$baseUrl/$specialistId'),
         headers: _getHeaders(token),
       );
 
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
         return Specialist.fromJson(data['specialist']);
+      } else {
+        throw Exception('Failed to load specialist details');
       }
-
-      throw Exception('Failed to load specialist');
     } catch (e) {
-      debugPrint('Error getting specialist: $e');
+      print('Error getting specialist details: $e');
       return null;
     }
   }
 
-  // =========================
-  // BOOK APPOINTMENT
-  // =========================
+  // ====== Get recommended specialists based on assessment ======
+  Future<Map<String, dynamic>> getRecommendedSpecialists(
+    int assessmentResultId,
+  ) async {
+    try {
+      final token = await _getToken();
+      if (token == null) throw Exception('No token found');
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/recommendations/$assessmentResultId'),
+        headers: _getHeaders(token),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'assessment': data['assessment'],
+          'recommendations': (data['recommendations'] as List)
+              .map((json) => Specialist.fromJson(json))
+              .toList(),
+        };
+      } else {
+        throw Exception('Failed to get recommendations');
+      }
+    } catch (e) {
+      print('Error getting recommendations: $e');
+      rethrow;
+    }
+  }
+
+  // ====== Book appointment ======
   Future<Map<String, dynamic>> bookAppointment({
     required int specialistId,
     required DateTime appointmentDate,
@@ -108,14 +146,13 @@ class SpecialistService {
   }) async {
     try {
       final token = await _getToken();
-      if (token == null) throw Exception('No token');
+      if (token == null) throw Exception('No token found');
 
-      final res = await http.post(
-        Uri.parse('$baseUrl/specialists/$specialistId/book'),
+      final response = await http.post(
+        Uri.parse('$baseUrl/$specialistId/book'),
         headers: _getHeaders(token),
         body: jsonEncode({
-          'appointment_date':
-              appointmentDate.toIso8601String().split('T')[0],
+          'appointment_date': appointmentDate.toIso8601String().split('T')[0],
           'start_time': startTime,
           'end_time': endTime,
           'session_type': sessionType,
@@ -123,98 +160,87 @@ class SpecialistService {
         }),
       );
 
-      if (res.statusCode == 200 || res.statusCode == 201) {
-        return jsonDecode(res.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to book appointment: ${response.body}');
       }
-
-      throw Exception(res.body);
     } catch (e) {
-      debugPrint('Error booking appointment: $e');
+      print('Error booking appointment: $e');
       rethrow;
     }
   }
 
-  // =========================
-  // USER APPOINTMENTS
-  // =========================
+  // ====== Get user appointments ======
   Future<List<Appointment>> getUserAppointments() async {
     try {
       final token = await _getToken();
-      if (token == null) throw Exception('No token');
+      if (token == null) throw Exception('No token found');
 
-      final res = await http.get(
-        Uri.parse('$baseUrl/appointments/user'),
+      final response = await http.get(
+        Uri.parse('$baseUrl/user/appointments'),
         headers: _getHeaders(token),
       );
 
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
         return (data['appointments'] as List)
-            .map((e) => Appointment.fromJson(e))
+            .map((json) => Appointment.fromJson(json))
             .toList();
+      } else {
+        throw Exception('Failed to load appointments');
       }
-
-      throw Exception('Failed to load appointments');
     } catch (e) {
-      debugPrint('Error loading appointments: $e');
+      print('Error getting appointments: $e');
       return [];
     }
   }
 
-  // =========================
-  // SPECIALIST BOOKINGS (Dashboard)
-  // =========================
-  Future<List<Appointment>> getSpecialistBookings(int specialistId) async {
-    try {
-      final token = await _getToken();
-      if (token == null) throw Exception('No token');
-
-      final url = '$baseUrl/bookings/specialist/$specialistId';
-      debugPrint('SpecialistService.getSpecialistBookings URL => $url (kIsWeb=$kIsWeb)');
-
-      final res = await http.get(
-        Uri.parse(url),
-        headers: _getHeaders(token),
-      );
-
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        return (data['bookings'] as List)
-            .map((e) => Appointment.fromJson(e))
-            .toList();
-      }
-
-      throw Exception('Failed to load specialist bookings');
-    } catch (e) {
-      debugPrint('Error getting specialist bookings: $e');
-      return [];
-    }
-  }
-
-  // =========================
-  // CANCEL APPOINTMENT
-  // =========================
+  // ====== Cancel appointment ======
   Future<bool> cancelAppointment(int appointmentId, String reason) async {
     try {
       final token = await _getToken();
-      if (token == null) throw Exception('No token');
+      if (token == null) throw Exception('No token found');
 
-      final res = await http.put(
+      final response = await http.put(
         Uri.parse('$baseUrl/appointments/$appointmentId/cancel'),
         headers: _getHeaders(token),
         body: jsonEncode({'cancellation_reason': reason}),
       );
 
-      return res.statusCode == 200;
+      return response.statusCode == 200;
     } catch (e) {
-      debugPrint('Error canceling appointment: $e');
+      print('Error canceling appointment: $e');
       return false;
     }
   }
 
-  // =========================
-  // SPECIALIST AVAILABILITY
-  // =========================
+  // ====== Share assessment with specialist ======
+  Future<bool> shareAssessmentWithSpecialist({
+    required int appointmentId,
+    required int assessmentResultId,
+  }) async {
+    try {
+      final token = await _getToken();
+      if (token == null) throw Exception('No token found');
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/share-assessment'),
+        headers: _getHeaders(token),
+        body: jsonEncode({
+          'appointment_id': appointmentId,
+          'assessment_result_id': assessmentResultId,
+        }),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error sharing assessment: $e');
+      return false;
+    }
+  }
+
+  // ====== Get specialist availability ======
   Future<List<dynamic>> getSpecialistAvailability(
     int specialistId,
     DateTime date,
@@ -222,29 +248,26 @@ class SpecialistService {
     try {
       final token = await _getToken();
 
-      final res = await http.get(
+      final response = await http.get(
         Uri.parse(
-          '$baseUrl/specialists/$specialistId/availability'
-          '?date=${date.toIso8601String().split('T')[0]}',
+          '$baseUrl/$specialistId/availability?date=${date.toIso8601String().split('T')[0]}',
         ),
         headers: _getHeaders(token),
       );
 
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
         return data['available_slots'] ?? [];
+      } else {
+        return [];
       }
-
-      return [];
     } catch (e) {
-      debugPrint('Error getting availability: $e');
+      print('Error getting availability: $e');
       return [];
     }
   }
 
-  // =========================
-  // REVIEWS
-  // =========================
+  // ====== Add review ======
   Future<bool> addReview({
     required int specialistId,
     required int rating,
@@ -254,10 +277,10 @@ class SpecialistService {
   }) async {
     try {
       final token = await _getToken();
-      if (token == null) throw Exception('No token');
+      if (token == null) throw Exception('No token found');
 
-      final res = await http.post(
-        Uri.parse('$baseUrl/specialists/$specialistId/review'),
+      final response = await http.post(
+        Uri.parse('$baseUrl/$specialistId/review'),
         headers: _getHeaders(token),
         body: jsonEncode({
           'rating': rating,
@@ -267,30 +290,31 @@ class SpecialistService {
         }),
       );
 
-      return res.statusCode == 200 || res.statusCode == 201;
+      return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
-      debugPrint('Error adding review: $e');
+      print('Error adding review: $e');
       return false;
     }
   }
 
+  // ====== Get specialist reviews ======
   Future<List<dynamic>> getSpecialistReviews(int specialistId) async {
     try {
       final token = await _getToken();
 
-      final res = await http.get(
-        Uri.parse('$baseUrl/specialists/$specialistId/reviews'),
+      final response = await http.get(
+        Uri.parse('$baseUrl/$specialistId/reviews'),
         headers: _getHeaders(token),
       );
 
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
         return data['reviews'] ?? [];
+      } else {
+        return [];
       }
-
-      return [];
     } catch (e) {
-      debugPrint('Error getting reviews: $e');
+      print('Error getting reviews: $e');
       return [];
     }
   }

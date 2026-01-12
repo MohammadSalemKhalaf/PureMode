@@ -61,6 +61,13 @@ router.put(
   specialistController.updateProfile
 );
 
+// Get a patient's mood entries (specialist only)
+router.get(
+  '/patients/:patient_id/moods',
+  authenticateToken,
+  specialistController.getPatientMoodEntries
+);
+
 // Get specialist by ID
 router.get('/:id', async (req, res) => {
   try {

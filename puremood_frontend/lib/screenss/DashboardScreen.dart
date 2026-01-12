@@ -16,6 +16,8 @@ import 'package:puremood_frontend/screenss/gamification_screen.dart';
 import 'package:puremood_frontend/screenss/chat_screen.dart';
 import 'package:puremood_frontend/screenss/specialists_list_screen.dart';
 import 'package:puremood_frontend/screenss/my_bookings_screen.dart';
+import 'package:puremood_frontend/screenss/my_mood_history_screen.dart';
+import 'package:puremood_frontend/screenss/messages_list_screen.dart';
 import '../widgets/assessment_reminder_dialog.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -53,6 +55,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   // Quick Access items (not in bottom nav)
   final List<_QuickAccessItem> _quickAccessItems = [
     _QuickAccessItem("Mood Tracking", Icons.emoji_emotions_outlined, Colors.teal),
+    _QuickAccessItem("Mood History", Icons.insights_outlined, Colors.indigo),
+    _QuickAccessItem("Messages", Icons.chat_bubble_outline, Colors.blueGrey),
+    _QuickAccessItem("AI Assistant", Icons.smart_toy_outlined, Colors.teal),
     _QuickAccessItem("My Bookings", Icons.calendar_today, Colors.deepOrange),
     _QuickAccessItem("Analytics", Icons.insights_rounded, Colors.blue),
     _QuickAccessItem("Assessments", Icons.psychology_outlined, Colors.purple),
@@ -133,6 +138,21 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     } catch (e) {
       // Silent fail - reminder is optional
       print('Assessment reminder check failed: $e');
+    }
+  }
+
+  // 📱 جدولة تذكير فتح التطبيق
+  Future<void> _scheduleAppStartupReminder() async {
+    try {
+      print('📱 Scheduling app startup reminder...');
+      final response = await api.scheduleAppStartupReminder();
+      
+      if (response != null) {
+        print('✅ App startup reminder scheduled successfully');
+      }
+    } catch (e) {
+      print('❌ Error scheduling app startup reminder: $e');
+      // Silent fail - reminder is optional
     }
   }
 
@@ -246,9 +266,11 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       data[i] = double.parse(dayScore.toStringAsFixed(1));
     }
 
-    setState(() {
-      weeklyMoodData = data;
-    });
+    if (mounted) {
+      setState(() {
+        weeklyMoodData = data;
+      });
+    }
 
     print('📈 Generated weekly data from $daysTracked entries: $weeklyMoodData');
   }
@@ -397,6 +419,24 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       context,
       MaterialPageRoute(
         builder: (_) => const MyBookingsScreen(),
+      ),
+    );
+  }
+
+  void _navigateToMessages() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const MessagesListScreen(),
+      ),
+    );
+  }
+
+  void _navigateToMyMoodHistory() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const MyMoodHistoryScreen(),
       ),
     );
   }
@@ -1281,10 +1321,12 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             calendarFormat: CalendarFormat.month,
             startingDayOfWeek: StartingDayOfWeek.sunday,
             onDaySelected: (selectedDay, focusedDay) {
-              setState(() {
-                _selectedDay = selectedDay;
-                _focusedDay = focusedDay;
-              });
+              if (mounted) {
+                setState(() {
+                  _selectedDay = selectedDay;
+                  _focusedDay = focusedDay;
+                });
+              }
             },
             onPageChanged: (focusedDay) {
               _focusedDay = focusedDay;
@@ -1826,11 +1868,17 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             case "Mood Tracking":
               _navigateToMoodTracking();
               break;
+            case "Mood History":
+              _navigateToMyMoodHistory();
+              break;
             case "AI Assistant":
               _navigateToChat();
               break;
             case "My Bookings":
               _navigateToMyBookings();
+              break;
+            case "Messages":
+              _navigateToMessages();
               break;
             case "Assessments":
               _navigateToAssessments();
@@ -2107,36 +2155,40 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: EdgeInsets.all(8),
+                      padding: EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: item.color.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(item.icon, color: item.color, size: 18),
+                      child: Icon(item.icon, color: item.color, size: 16),
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: 6),
                     Text(
                       item.title,
                       style: GoogleFonts.poppins(
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF004D40),
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 2),
+                    SizedBox(height: 1),
                     Text(
                       item.subtitle,
                       style: GoogleFonts.poppins(
-                        fontSize: 10,
+                        fontSize: 9,
                         color: Colors.grey.shade600,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -2434,7 +2486,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(Icons.home, "Home", true, () {}),
-              _buildNavItem(Icons.chat_bubble_outline, "AI Chat", false, _navigateToChat),
+              _buildNavItem(Icons.message_outlined, "Messages", false, _navigateToMessages),
               _buildNavItem(Icons.emoji_events, "Rewards", false, _navigateToGamification),
               _buildNavItem(Icons.medical_services_outlined, "Specialists", false, _navigateToSpecialists),
               _buildNavItem(Icons.person_outline, "Profile", false, _navigateToProfile),
@@ -2479,6 +2531,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
 
   @override
   void dispose() {
+    _animationController.stop();
     _animationController.dispose();
     super.dispose();
   }

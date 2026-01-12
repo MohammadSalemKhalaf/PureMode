@@ -9,7 +9,8 @@ const {
   likePost,
   getComments,
   createComment,
-  deleteComment
+  deleteComment,
+  repostPost
 } = require('../controllers/communityController');
 
 router.get('/posts', verifyToken, getAllPosts);
@@ -17,6 +18,7 @@ router.post('/posts', verifyToken, createPost);
 router.get('/posts/:post_id', verifyToken, getPostById);
 router.delete('/posts/:post_id', verifyToken, deletePost);
 router.post('/posts/:post_id/like', verifyToken, likePost);
+router.post('/posts/:post_id/repost', verifyToken, repostPost);
 router.get('/posts/:post_id/comments', verifyToken, getComments);
 router.post('/posts/:post_id/comments', verifyToken, createComment);
 router.delete('/comments/:comment_id', verifyToken, deleteComment);

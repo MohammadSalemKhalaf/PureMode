@@ -9,7 +9,7 @@ class RatingService {
 
   Future<Map<String, dynamic>> rateSpecialist(int specialistId, double rating) async {
     try {
-      final token = await _storage.read(key: 'token');
+      final token = await _storage.read(key: 'jwt');
 
       if (token == null) {
         throw Exception('No authentication token found');

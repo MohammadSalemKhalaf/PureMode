@@ -15,6 +15,19 @@ class _CommunityScreenState extends State<CommunityScreen> {
   bool _loading = true;
   String? _error;
 
+  DateTime _parseCreatedAt(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is DateTime) return value;
+    final parsed = DateTime.tryParse(value.toString());
+    return parsed ?? DateTime.now();
+  }
+
+  int? _parseId(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
+  }
+
   @override
   void initState() {
     super.initState();
@@ -130,15 +143,24 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   Widget _buildPostCard(Map<String, dynamic> post) {
     final userName = post['User']?['name'] ?? 'Anonymous';
-    final createdAt = DateTime.parse(post['created_at']);
+    final createdAt = _parseCreatedAt(post['created_at']);
     final timeAgo = timeago.format(createdAt);
+    final isRepost = post['original_post_id'] != null;
+    final originalPost = post['OriginalPost'];
+    final postId = _parseId(post['post_id']);
 
     return InkWell(
       onTap: () {
+        if (postId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invalid post')),
+          );
+          return;
+        }
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => PostDetailsScreen(postId: post['post_id']),
+            builder: (context) => PostDetailsScreen(postId: postId),
           ),
         ).then((_) => _loadPosts());
       },
@@ -159,71 +181,190 @@ class _CommunityScreenState extends State<CommunityScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: Colors.teal.shade100,
-                child: Icon(Icons.person, color: Colors.teal.shade700),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      userName,
-                      style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF004D40),
-                      ),
-                    ),
-                    Text(
-                      timeAgo,
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
+          // إظهار معلومات إعادة النشر إذا كان المنشور معاد نشره
+          if (isRepost) ...[
+            Row(
+              children: [
+                Icon(Icons.repeat, size: 16, color: Colors.green.shade600),
+                const SizedBox(width: 6),
+                Text(
+                  '$userName reposted',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.green.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  timeAgo,
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // إظهار المحتوى الإضافي لإعادة النشر إذا كان موجوداً
+            if (post['content'] != null && post['content'].toString().trim().isNotEmpty) ...[
+              Text(
+                post['content'],
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.grey.shade700,
+                  height: 1.5,
                 ),
               ),
+              const SizedBox(height: 12),
             ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            post['title'] ?? '',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade800,
+            // المنشور الأصلي
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: Colors.teal.shade100,
+                        radius: 12,
+                        child: Icon(Icons.person, color: Colors.teal.shade700, size: 16),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        originalPost?['User']?['name'] ?? 'Anonymous',
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF004D40),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    originalPost?['title'] ?? '',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    originalPost?['content'] ?? '',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                      height: 1.4,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            post['content'] ?? '',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: Colors.grey.shade700,
-              height: 1.5,
+          ] else ...[
+            // المنشور العادي (غير معاد النشر)
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: Colors.teal.shade100,
+                  child: Icon(Icons.person, color: Colors.teal.shade700),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        userName,
+                        style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF004D40),
+                        ),
+                      ),
+                      Text(
+                        timeAgo,
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ),
+            const SizedBox(height: 12),
+            Text(
+              post['title'] ?? '',
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              post['content'] ?? '',
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Colors.grey.shade700,
+                height: 1.5,
+              ),
+            ),
+          ],
           const SizedBox(height: 15),
           Row(
             children: [
-              InkWell(
-                onTap: () => _likePost(post['post_id']),
-                child: _buildActionButton(
-                  Icons.favorite_border,
-                  '${post['likes_count'] ?? 0}',
-                  Colors.pink,
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    if (postId != null) {
+                      _likePost(postId);
+                    }
+                  },
+                  child: Center(
+                    child: _buildActionButton(
+                      Icons.favorite_border,
+                      '${post['likes_count'] ?? 0}',
+                      Colors.pink,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(width: 20),
-              _buildActionButton(
-                Icons.comment_outlined,
-                '${post['comments_count'] ?? 0}',
-                Colors.blue,
+              Expanded(
+                child: Center(
+                  child: _buildActionButton(
+                    Icons.comment_outlined,
+                    '${post['comments_count'] ?? 0}',
+                    Colors.blue,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    if (postId != null) {
+                      _showRepostDialog(post);
+                    }
+                  },
+                  child: Center(
+                    child: _buildActionButton(
+                      Icons.repeat,
+                      '${post['repost_count'] ?? 0}',
+                      Colors.green,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -367,6 +508,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     ),
                   );
                 } catch (e) {
+                  if (e is CommentModerationException) {
+                    final found = e.foundWords.isNotEmpty ? e.foundWords.join(', ') : '';
+                    final details = found.isNotEmpty ? ' ($found)' : '';
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('${e.message}$details')),
+                    );
+                    return;
+                  }
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Error: $e')),
                   );
@@ -388,6 +537,161 @@ class _CommunityScreenState extends State<CommunityScreen> {
             ),
           ),
         ],
+        ),
+      ),
+    );
+  }
+
+  void _showRepostDialog(Map<String, dynamic> post) {
+    final TextEditingController contentController = TextEditingController();
+    bool isAnonymous = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.repeat, color: Colors.green.shade700),
+              const SizedBox(width: 10),
+              Text(
+                'Repost',
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF004D40),
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // عرض المنشور الأصلي
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: Colors.teal.shade100,
+                            radius: 12,
+                            child: Icon(Icons.person, color: Colors.teal.shade700, size: 16),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            post['User']?['name'] ?? 'Anonymous',
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF004D40),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        post['title'] ?? '',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        post['content'] ?? '',
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                          height: 1.4,
+                        ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: contentController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    labelText: 'Add your thoughts (optional)',
+                    hintText: 'What do you think about this?',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                CheckboxListTile(
+                  value: isAnonymous,
+                  onChanged: (value) {
+                    setState(() {
+                      isAnonymous = value!;
+                    });
+                  },
+                  title: Text('Repost anonymously', style: GoogleFonts.poppins(fontSize: 14)),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.poppins(color: Colors.grey.shade600),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await _communityService.repostPost(
+                    postId: post['post_id'],
+                    content: contentController.text.trim().isEmpty ? null : contentController.text,
+                    isAnonymous: isAnonymous,
+                  );
+                  Navigator.pop(context);
+                  _loadPosts();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Reposted successfully!', style: GoogleFonts.poppins()),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.shade600,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: Text(
+                'Repost',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

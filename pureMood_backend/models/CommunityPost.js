@@ -35,6 +35,18 @@ const CommunityPost = sequelize.define('CommunityPost', {
     type: DataTypes.INTEGER,
     defaultValue: 0
   },
+  repost_count: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
+  },
+  original_post_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'community_posts',
+      key: 'post_id'
+    }
+  },
   is_anonymous: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
@@ -52,6 +64,14 @@ CommunityPost.associate = (models) => {
   CommunityPost.belongsTo(models.User, { foreignKey: 'user_id' });
   CommunityPost.hasMany(models.CommunityComment, { foreignKey: 'post_id' });
   CommunityPost.hasMany(models.CommunityLike, { foreignKey: 'post_id' });
+  CommunityPost.belongsTo(models.CommunityPost, { 
+    foreignKey: 'original_post_id', 
+    as: 'OriginalPost' 
+  });
+  CommunityPost.hasMany(models.CommunityPost, { 
+    foreignKey: 'original_post_id', 
+    as: 'Reposts' 
+  });
 };
 
 module.exports = CommunityPost;

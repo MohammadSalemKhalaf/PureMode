@@ -52,12 +52,14 @@ const bookingChatRoutes = require('./routes/bookingChatRoutes');
 // Email verification (send code + verify + reset password)
 const emailVerificationRoutes = require('./routes/emailVerificationRoutes');
 
+// User notifications and mood reminders
+const userNotificationRoutes = require('./routes/userNotificationRoutes');
+
+// FCM tokens for Firebase push notifications
+const fcmTokenRoutes = require('./routes/fcmTokenRoutes');
+
 // AI health check
 app.get('/api/ai/ping', (req, res) => res.json({ ok: true }));
-
-// Legacy-compatible login route: /api/login -> same handler as /api/users/login
-const { login } = require('./controllers/userController');
-app.post('/api/login', login);
 
 // 🔗 Route mounting
 app.use('/api/users', userRoutes);
@@ -78,6 +80,8 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/payment', paymentRefundRoutes); // Refunds
 app.use('/api/chat', bookingChatRoutes);
 app.use('/api/email', emailVerificationRoutes);
+app.use('/api/user-notifications', userNotificationRoutes);
+app.use('/api/fcm-tokens', fcmTokenRoutes);
 
 // Test endpoint
 app.get('/test', (req, res) => {
@@ -101,6 +105,8 @@ const startServer = async () => {
     const Booking = require('./models/Booking');
     const Specialist = require('./models/Specialist');
     const Transaction = require('./models/transaction.model');
+    const UserNotification = require('./models/UserNotification');
+    const UserFcmToken = require('./models/UserFcmToken');
 
     // RELATIONS -----------
 
@@ -111,6 +117,16 @@ const startServer = async () => {
     CommunityPost.belongsTo(User, { foreignKey: 'user_id' });
     CommunityPost.hasMany(CommunityComment, { foreignKey: 'post_id' });
     CommunityPost.hasMany(CommunityLike, { foreignKey: 'post_id' });
+
+    CommunityPost.belongsTo(CommunityPost, {
+      foreignKey: 'original_post_id',
+      as: 'OriginalPost'
+    });
+
+    CommunityPost.hasMany(CommunityPost, {
+      foreignKey: 'original_post_id',
+      as: 'Reposts'
+    });
 
     CommunityComment.belongsTo(User, { foreignKey: 'user_id' });
     CommunityComment.belongsTo(CommunityPost, { foreignKey: 'post_id' });
@@ -134,6 +150,14 @@ const startServer = async () => {
 
     Booking.hasMany(Transaction, { foreignKey: 'booking_id', as: 'transactions' });
 
+    // User Notifications Relations
+    User.hasMany(UserNotification, { foreignKey: 'user_id' });
+    UserNotification.belongsTo(User, { foreignKey: 'user_id' });
+
+    // User FCM Tokens Relations
+    User.hasMany(UserFcmToken, { foreignKey: 'user_id' });
+    UserFcmToken.belongsTo(User, { foreignKey: 'user_id' });
+
     // Migrations
     try {
       await sequelize.query(`
@@ -143,14 +167,105 @@ const startServer = async () => {
       console.log('✅ users.status column verified');
     } catch (err) {}
 
+    // Add language_preference column to users table
     try {
       await sequelize.query(`
-        ALTER TABLE community_posts 
-        ADD COLUMN IF NOT EXISTS likes_count INT DEFAULT 0,
-        ADD COLUMN IF NOT EXISTS comments_count INT DEFAULT 0
+        ALTER TABLE users 
+        ADD COLUMN language_preference ENUM('ar','en') DEFAULT 'ar'
       `);
-      console.log('✅ community_posts counters verified');
-    } catch (err) {}
+      console.log('✅ users.language_preference column added');
+    } catch (err) {
+      if (err && err.original && err.original.code === 'ER_DUP_FIELDNAME') {
+        console.log('ℹ️ users.language_preference column already exists');
+      } else {
+        console.log('⚠️ Error ensuring users.language_preference column:', err.message || err);
+      }
+    }
+
+    // Create user_fcm_tokens table for Firebase push notifications
+    try {
+      await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS user_fcm_tokens (
+          token_id INT AUTO_INCREMENT PRIMARY KEY,
+          user_id INT NOT NULL,
+          fcm_token VARCHAR(255) NOT NULL UNIQUE,
+          device_type ENUM('android', 'ios', 'web') DEFAULT 'android',
+          device_info VARCHAR(255) DEFAULT NULL,
+          is_active BOOLEAN DEFAULT TRUE,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX idx_user_id (user_id),
+          INDEX idx_fcm_token (fcm_token),
+          INDEX idx_is_active (is_active),
+          FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+      console.log('✅ user_fcm_tokens table created/verified');
+    } catch (err) {
+      console.log('⚠️ Error creating user_fcm_tokens table:', err.message || err);
+    }
+
+    // Create user_notifications table
+    try {
+      await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS user_notifications (
+          notification_id INT AUTO_INCREMENT PRIMARY KEY,
+          user_id INT NOT NULL,
+          type VARCHAR(50) NOT NULL COMMENT 'نوع الإشعار: mood_reminder, appointment_reminder, etc.',
+          title_ar VARCHAR(255) NOT NULL COMMENT 'عنوان الإشعار بالعربية',
+          title_en VARCHAR(255) NOT NULL COMMENT 'عنوان الإشعار بالإنجليزية',
+          message_ar TEXT NOT NULL COMMENT 'محتوى الإشعار بالعربية',
+          message_en TEXT NOT NULL COMMENT 'محتوى الإشعار بالإنجليزية',
+          data JSON DEFAULT NULL COMMENT 'بيانات إضافية (metadata)',
+          is_read BOOLEAN DEFAULT FALSE COMMENT 'هل تم قراءة الإشعار',
+          scheduled_at DATETIME DEFAULT NULL COMMENT 'موعد الإشعار المجدول',
+          sent_at DATETIME DEFAULT NULL COMMENT 'تاريخ الإرسال الفعلي',
+          status ENUM('pending', 'sent', 'failed') DEFAULT 'pending' COMMENT 'حالة الإشعار',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          INDEX idx_user_id (user_id),
+          INDEX idx_scheduled_at (scheduled_at),
+          INDEX idx_status (status),
+          INDEX idx_type (type),
+          INDEX idx_is_read (is_read),
+          FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+      console.log('✅ user_notifications table created/verified');
+    } catch (err) {
+      console.log('⚠️ Error creating user_notifications table:', err.message || err);
+    }
+
+    // Some MySQL versions don't support "ADD COLUMN IF NOT EXISTS" reliably.
+    // Ensure community_posts has required columns using per-column ALTERs.
+    const ensureCommunityPostColumn = async (sql, okMsg) => {
+      try {
+        await sequelize.query(sql);
+        console.log(okMsg);
+      } catch (err) {
+        if (err && err.original && err.original.code === 'ER_DUP_FIELDNAME') {
+          console.log(`ℹ️  ${okMsg.replace('✅ ', '')} already exists`);
+        } else {
+          console.log('⚠️  Error ensuring community_posts column:', err.message || err);
+        }
+      }
+    };
+
+    await ensureCommunityPostColumn(
+      `ALTER TABLE community_posts ADD COLUMN likes_count INT DEFAULT 0`,
+      '✅ community_posts.likes_count verified'
+    );
+    await ensureCommunityPostColumn(
+      `ALTER TABLE community_posts ADD COLUMN comments_count INT DEFAULT 0`,
+      '✅ community_posts.comments_count verified'
+    );
+    await ensureCommunityPostColumn(
+      `ALTER TABLE community_posts ADD COLUMN repost_count INT DEFAULT 0`,
+      '✅ community_posts.repost_count verified'
+    );
+    await ensureCommunityPostColumn(
+      `ALTER TABLE community_posts ADD COLUMN original_post_id INT NULL`,
+      '✅ community_posts.original_post_id verified'
+    );
 
     // Ensure specialists table has all expected columns
     try {
@@ -251,6 +366,13 @@ const startServer = async () => {
 
     await sequelize.sync();
     console.log('✅ Models synced');
+
+    // 🔔 Start mood reminder service automatically
+    const moodReminderService = require('./services/moodReminderService');
+    setTimeout(() => {
+      moodReminderService.startMoodReminderService();
+      console.log('🚀 Mood reminder service auto-started');
+    }, 3000); // انتظار 3 ثواني لضمان اكتمال تحميل النماذج
 
     const PORT = process.env.PORT || 5000;
 

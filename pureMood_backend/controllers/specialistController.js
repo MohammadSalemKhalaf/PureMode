@@ -2,6 +2,7 @@ const db = require('../config/db');
 const Specialist = require('../models/Specialist');
 const Appointment = require('../models/Appointment');
 const AssessmentResult = require('../models/AssessmentResult');
+const { QueryTypes } = require('sequelize');
 
 // ====== Get all specialists with filters ======
 exports.getAllSpecialists = async (req, res) => {
@@ -34,6 +35,67 @@ exports.getAllSpecialists = async (req, res) => {
   } catch (err) {
     console.error('Error getting specialists:', err);
     res.status(500).json({ error: 'Failed to get specialists' });
+  }
+};
+
+// ====== Get patient mood entries (specialist only; must have an appointment) ======
+exports.getPatientMoodEntries = async (req, res) => {
+  try {
+    const specialist_user_id = req.user.user_id;
+    const { patient_id } = req.params;
+
+    if (!req.user || req.user.role !== 'specialist') {
+      return res.status(403).json({ error: 'Not authorized as specialist' });
+    }
+
+    const specialist = await db.query(
+      `SELECT specialist_id FROM specialists WHERE user_id = ?`,
+      {
+        replacements: [specialist_user_id],
+        type: QueryTypes.SELECT,
+      }
+    );
+
+    if (!specialist || specialist.length === 0) {
+      return res.status(403).json({ error: 'Not authorized as specialist' });
+    }
+
+    const hasBooking = await db.query(
+      `SELECT 1 FROM bookings WHERE specialist_id = ? AND patient_id = ? LIMIT 1`,
+      {
+        replacements: [specialist[0].specialist_id, patient_id],
+        type: QueryTypes.SELECT,
+      }
+    );
+
+    // Support legacy/alternate flow where appointments table is used
+    const hasAppointment = await db.query(
+      `SELECT 1 FROM appointments WHERE specialist_id = ? AND user_id = ? LIMIT 1`,
+      {
+        replacements: [specialist[0].specialist_id, patient_id],
+        type: QueryTypes.SELECT,
+      }
+    );
+
+    if ((!hasBooking || hasBooking.length === 0) && (!hasAppointment || hasAppointment.length === 0)) {
+      return res.status(403).json({ error: 'You are not allowed to view this patient\'s mood entries' });
+    }
+
+    const entries = await db.query(
+      `SELECT mood_id, user_id, mood_emoji, note_text, note_audio, created_at
+       FROM mood_entries
+       WHERE user_id = ?
+       ORDER BY created_at DESC`,
+      {
+        replacements: [patient_id],
+        type: QueryTypes.SELECT,
+      }
+    );
+
+    return res.json({ entries: entries || [] });
+  } catch (err) {
+    console.error('Error getting patient mood entries:', err);
+    return res.status(500).json({ error: 'Failed to get patient mood entries' });
   }
 };
 

@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/booking.dart';
 import '../services/booking_service.dart';
 import '../services/specialist_service.dart';
+import '../config/api_config.dart';
 import '../widgets/cancel_booking_dialog.dart';
 import 'patient_specialist_chat_screen.dart';
 import 'video_call_screen.dart';
@@ -45,6 +46,13 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPr
         ),
       );
     }
+  }
+
+  String? _resolvePicture(String? rawPicture) {
+    if (rawPicture == null || rawPicture.isEmpty) return null;
+    if (rawPicture.startsWith('http')) return rawPicture;
+    final baseHost = ApiConfig.baseUrl.replaceFirst('/api', '');
+    return '$baseHost$rawPicture';
   }
 
   Future<void> _showRatingDialog(Booking booking) async {
@@ -575,6 +583,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPr
                         specialistId: booking.specialistId,
                         title: booking.specialistName ?? 'Specialist Chat',
                         isPatientView: true,
+                        avatarUrl: _resolvePicture(booking.specialistPicture),
                       ),
                     ),
                   );

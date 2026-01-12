@@ -83,6 +83,7 @@ class _NotificationDropdownState extends State<NotificationDropdown> {
           child: NotificationMenuContent(
             baseUrl: widget.baseUrl,
             token: widget.token,
+            parentContext: context,
             onNotificationsChanged: _loadUnreadCount,
           ),
         ),
@@ -136,12 +137,14 @@ class _NotificationDropdownState extends State<NotificationDropdown> {
 class NotificationMenuContent extends StatefulWidget {
   final String baseUrl;
   final String token;
+  final BuildContext parentContext;
   final VoidCallback onNotificationsChanged;
 
   const NotificationMenuContent({
     Key? key,
     required this.baseUrl,
     required this.token,
+    required this.parentContext,
     required this.onNotificationsChanged,
   }) : super(key: key);
 
@@ -300,7 +303,7 @@ class _NotificationMenuContentState extends State<NotificationMenuContent> {
                                 _markAsRead(notification.notificationId);
                               }
                               Navigator.pop(context);
-                              _handleNotificationTap(notification);
+                              Future.microtask(() => _handleNotificationTap(notification));
                             },
                           );
                         },
@@ -316,7 +319,7 @@ class _NotificationMenuContentState extends State<NotificationMenuContent> {
               onPressed: () {
                 Navigator.pop(context);
                 // Navigate to admin dashboard instead since notifications screen doesn't exist yet
-                Navigator.pushNamed(context, '/admin/dashboard');
+                Future.microtask(() => Navigator.pushNamed(widget.parentContext, '/admin/dashboard'));
               },
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -336,12 +339,12 @@ class _NotificationMenuContentState extends State<NotificationMenuContent> {
   void _handleNotificationTap(NotificationModel notification) {
     switch (notification.type) {
       case 'new_user_pending':
-        Navigator.pushNamed(context, '/admin/pending');
+        Navigator.pushNamed(widget.parentContext, '/admin/pending');
         break;
       case 'new_post':
         final postId = notification.data?['post_id'];
         if (postId != null) {
-          Navigator.pushNamed(context, '/admin/posts');
+          Navigator.pushNamed(widget.parentContext, '/admin/posts');
         }
         break;
       default:

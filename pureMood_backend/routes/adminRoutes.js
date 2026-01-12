@@ -19,6 +19,8 @@ router.use(isAdmin);
 // ====== Dashboard Stats ======
 router.get('/stats', adminController.getDashboardStats);
 
+router.post('/add-admin', adminController.createAdmin);
+
 // ====== Specialists Management ======
 router.get('/specialists', adminController.getAllSpecialists);
 router.get('/specialists/pending', adminController.getPendingSpecialists);

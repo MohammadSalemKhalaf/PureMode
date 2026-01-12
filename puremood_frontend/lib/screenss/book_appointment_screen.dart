@@ -6,6 +6,7 @@ import '../models/booking.dart';
 import '../services/booking_service.dart';
 import '../config/api_config.dart';
 import 'payment_screen.dart';
+import '../services/notification_service.dart';
 
 class BookAppointmentScreen extends StatefulWidget {
   final Specialist specialist;
@@ -17,6 +18,8 @@ class BookAppointmentScreen extends StatefulWidget {
 }
 
 class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
+  static const bool _appointmentReminderTestMode = true;
+
   final BookingService _bookingService = BookingService();
   final TextEditingController _notesController = TextEditingController();
   
@@ -114,7 +117,33 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
           ),
         );
 
+        print('PaymentScreen returned: $paymentSuccess for bookingId=$bookingId');
+
         if (paymentSuccess == true && mounted) {
+          try {
+            final sessionStart = DateTime.parse('${dateStr}T${_selectedSlot!.start}:00');
+            print('Scheduling reminders for bookingId=$bookingId sessionStart=$sessionStart');
+
+            if (_appointmentReminderTestMode) {
+              await testAppointmentReminderAfterBooking(
+                specialistName: widget.specialist.name,
+                sessionType: _sessionType,
+                appointmentTime: sessionStart,
+              );
+            } else {
+              await scheduleSessionReminders(
+                bookingId: bookingId,
+                sessionStart: sessionStart,
+                specialistName: widget.specialist.name,
+                sessionType: _sessionType,
+              );
+            }
+            
+            print('✅ All reminders scheduled successfully');
+          } catch (e) {
+            print('Failed to schedule session reminders: $e');
+          }
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(

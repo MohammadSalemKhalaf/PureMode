@@ -22,6 +22,13 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
   bool isAnonymousComment = true;
   String? error;
 
+  DateTime _parseCreatedAt(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is DateTime) return value;
+    final parsed = DateTime.tryParse(value.toString());
+    return parsed ?? DateTime.now();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -71,6 +78,14 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
         ),
       );
     } catch (e) {
+      if (e is CommentModerationException) {
+        final found = e.foundWords.isNotEmpty ? e.foundWords.join(', ') : '';
+        final details = found.isNotEmpty ? ' ($found)' : '';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${e.message}$details')),
+        );
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
@@ -124,7 +139,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
     if (post == null) return const SizedBox();
 
     final userName = post!['User']?['name'] ?? 'Anonymous';
-    final createdAt = DateTime.parse(post!['created_at']);
+    final createdAt = _parseCreatedAt(post!['created_at']);
     final timeAgo = timeago.format(createdAt);
 
     return Container(
@@ -293,7 +308,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
 
   Widget _buildCommentCard(Map<String, dynamic> comment) {
     final userName = comment['User']?['name'] ?? 'Anonymous';
-    final createdAt = DateTime.parse(comment['created_at']);
+    final createdAt = _parseCreatedAt(comment['created_at']);
     final timeAgo = timeago.format(createdAt);
 
     return Container(
