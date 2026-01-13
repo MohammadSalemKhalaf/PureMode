@@ -4,10 +4,12 @@ const CommunityLike = require('../models/CommunityLike');
 const User = require('../models/User');
 const { Op } = require('sequelize');
 const { moderateContent } = require('../utils/contentModeration');
+const { createNotification } = require('./notificationController');
 
 exports.getAllPosts = async (req, res) => {
   try {
     const { category } = req.query;
+    const userId = req.user?.user_id;
     
     const whereClause = category ? { category } : {};
     
@@ -31,8 +33,21 @@ exports.getAllPosts = async (req, res) => {
       ]
     });
 
+    const postIds = posts.map((post) => post.post_id);
+    let likedPostIds = new Set();
+
+    if (userId && postIds.length > 0) {
+      const likes = await CommunityLike.findAll({
+        where: { user_id: userId, post_id: postIds },
+        attributes: ['post_id']
+      });
+      likedPostIds = new Set(likes.map((like) => like.post_id));
+    }
+
     const postsWithUserData = await Promise.all(posts.map(async (post) => {
       const postData = post.toJSON();
+      postData.can_delete = !!userId && (postData.user_id === userId || req.user?.role === 'admin');
+      postData.liked_by_user = likedPostIds.has(postData.post_id);
       
       if (postData.is_anonymous) {
         postData.User = {
@@ -98,6 +113,22 @@ exports.createPost = async (req, res) => {
       is_anonymous: is_anonymous || false
     });
 
+    try {
+      const author = await User.findByPk(user_id, {
+        attributes: ['name', 'email']
+      });
+      const authorName = is_anonymous ? 'Anonymous' : (author?.name || 'Unknown');
+      const authorEmail = author?.email || '';
+      await createNotification(
+        'new_post',
+        'New community post',
+        `New post by ${authorName}${authorEmail ? ` (${authorEmail})` : ''}: ${finalTitle}`,
+        { post_id: post.post_id, user_id, is_anonymous: !!is_anonymous }
+      );
+    } catch (notifyError) {
+      console.error('Failed to create admin notification for new post:', notifyError);
+    }
+
     const wasFiltered = titleModeration.action === 'filter' || contentModeration.action === 'filter';
     const responseMessage = wasFiltered 
       ? 'Post created successfully with some words filtered'
@@ -121,6 +152,7 @@ exports.createPost = async (req, res) => {
 exports.getPostById = async (req, res) => {
   try {
     const { post_id } = req.params;
+    const userId = req.user?.user_id;
 
     const post = await CommunityPost.findByPk(post_id, {
       include: [{
@@ -134,6 +166,16 @@ exports.getPostById = async (req, res) => {
     }
 
     const postData = post.toJSON();
+    postData.can_delete = !!userId && (postData.user_id === userId || req.user?.role === 'admin');
+    postData.liked_by_user = false;
+
+    if (userId) {
+      const like = await CommunityLike.findOne({
+        where: { post_id, user_id: userId },
+        attributes: ['post_id']
+      });
+      postData.liked_by_user = !!like;
+    }
     
     if (postData.is_anonymous) {
       postData.User = {
@@ -189,12 +231,14 @@ exports.likePost = async (req, res) => {
 
     if (existingLike) {
       await existingLike.destroy();
-      await post.update({ likes_count: post.likes_count - 1 });
-      return res.json({ message: 'Post unliked', liked: false, likes_count: post.likes_count - 1 });
+      const nextCount = Math.max(0, (post.likes_count || 0) - 1);
+      await post.update({ likes_count: nextCount });
+      return res.json({ message: 'Post unliked', liked: false, likes_count: nextCount });
     } else {
       await CommunityLike.create({ post_id, user_id });
-      await post.update({ likes_count: post.likes_count + 1 });
-      return res.json({ message: 'Post liked', liked: true, likes_count: post.likes_count + 1 });
+      const nextCount = (post.likes_count || 0) + 1;
+      await post.update({ likes_count: nextCount });
+      return res.json({ message: 'Post liked', liked: true, likes_count: nextCount });
     }
   } catch (error) {
     console.error('Error liking post:', error);

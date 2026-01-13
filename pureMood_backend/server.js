@@ -55,6 +55,9 @@ const emailVerificationRoutes = require('./routes/emailVerificationRoutes');
 // User notifications and mood reminders
 const userNotificationRoutes = require('./routes/userNotificationRoutes');
 
+// Admin notifications
+const notificationRoutes = require('./routes/notificationRoutes');
+
 // FCM tokens for Firebase push notifications
 const fcmTokenRoutes = require('./routes/fcmTokenRoutes');
 
@@ -81,6 +84,7 @@ app.use('/api/payment', paymentRefundRoutes); // Refunds
 app.use('/api/chat', bookingChatRoutes);
 app.use('/api/email', emailVerificationRoutes);
 app.use('/api/user-notifications', userNotificationRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/fcm-tokens', fcmTokenRoutes);
 
 // Test endpoint

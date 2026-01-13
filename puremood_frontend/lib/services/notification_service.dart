@@ -30,7 +30,9 @@ Future<void> initializeNotifications() async {
   await flutterLocalNotificationsPlugin.initialize(
     initializationSettings,
     onDidReceiveNotificationResponse: (NotificationResponse response) async {
-      if (_notificationTapHandler != null) {
+      if (_notificationTapHandler != null &&
+          response.notificationResponseType ==
+              NotificationResponseType.selectedNotification) {
         await _notificationTapHandler!(response.payload);
       }
     },
@@ -222,15 +224,16 @@ String _formatTimeArabic(DateTime dt) {
 Future<void> showFirebaseNotification(RemoteMessage message) async {
   final type = message.data['type'];
   final channelId = type == 'chat_message' ? 'chat_channel_v2' : 'firebase_channel';
+  final isChat = channelId == 'chat_channel_v2';
   final title = message.notification?.title ?? 'New message';
   final body = message.notification?.body ?? 'Open to view';
   final androidDetails = AndroidNotificationDetails(
     channelId,
-    channelId == 'chat_channel' ? 'Chat Messages' : 'Firebase Notifications',
-    channelDescription: channelId == 'chat_channel'
+    isChat ? 'Chat Messages' : 'Firebase Notifications',
+    channelDescription: isChat
         ? 'Chat message notifications'
         : 'Notifications from Firebase',
-    importance: channelId == 'chat_channel' ? Importance.max : Importance.high,
+    importance: isChat ? Importance.max : Importance.high,
     priority: Priority.high,
     playSound: true,
     enableVibration: true,

@@ -6,6 +6,53 @@ const { QueryTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const fs = require('fs');
 const path = require('path');
+const { createNotification } = require('./notificationController');
+const Tesseract = require('tesseract.js');
+
+async function evaluateSpecialistCertificate({ specialistData, file, filePath }) {
+  const keywordsEn = [
+    'psych', 'psychology', 'psychotherapist', 'therapist', 'therapy', 'counselor', 'counselling',
+    'counseling', 'mental', 'behavioral', 'clinical', 'psychiatry', 'psychiatric', 'cbt',
+    'cognitive', 'social work', 'msw', 'lcsw', 'lpcc', 'lpc', 'lmft', 'mft', 'phd', 'md',
+    'psychologist', 'mental health'
+  ];
+
+  const keywordsAr = [
+    '??? ?????', '????', '?????', '??????', '????? ???????', '?????? ??????',
+    '??????? ??????', '???????? ??????', '??????? ??????', '??????? ??????',
+    '?????? ???????', '???????', '??????????', '????????', '???? ??????',
+    '?????? ???????', '???????', '??????', '?????? ??????',
+    '??????? ??????? ????????? ????????', '????????? ????????', '?????? ??????', '??????? ???????'
+  ];
+
+  if (!file || !file.originalname || !filePath) {
+    return { status: 'rejected', reason: 'missing_certificate', matched: [] };
+  }
+
+  // OCR the certificate image to ensure it contains relevant psych terms.
+  let ocrText = '';
+  try {
+    const result = await Tesseract.recognize(filePath, 'eng+ara', {
+      logger: () => {}
+    });
+    ocrText = result && result.data && result.data.text ? result.data.text : '';
+  } catch (e) {
+    console.error('OCR failed:', e);
+    return { status: 'rejected', reason: 'ocr_failed', matched: [] };
+  }
+
+  const ocrLower = ocrText.toLowerCase();
+  const matchedEn = keywordsEn.filter((k) => ocrLower.includes(k));
+  const matchedAr = keywordsAr.filter((k) => ocrText.includes(k));
+  const matched = [...matchedEn, ...matchedAr];
+
+  if (matched.length > 0) {
+    return { status: 'accepted', reason: 'ocr_keyword_match', matched };
+  }
+
+  return { status: 'rejected', reason: 'ocr_no_keywords', matched: [] };
+}
+
 
 // تسجيل مستخدم جديد
 const register = async (req, res) => {
@@ -32,10 +79,28 @@ const register = async (req, res) => {
     // Only allow specialist registration explicitly; everything else becomes patient
     const finalRole = role === 'specialist' ? 'specialist' : 'patient';
 
-    // تحديد status بناءً على role
+    // Set status based on role (auto-evaluated for specialists)
     let status = 'accepted';
+    let parsedSpecialistData = specialistData;
+    if (typeof specialistData === 'string') {
+      try {
+        parsedSpecialistData = JSON.parse(specialistData);
+      } catch (e) {
+        console.error('Failed to parse specialistData JSON:', e);
+      }
+    }
+
+    let aiDecision = { status: 'accepted', reason: '', matched: [] };
     if (finalRole === 'specialist') {
-      status = 'pending';
+      const certificatePath = req.file
+        ? path.join(__dirname, '..', 'uploads', 'certificates', req.file.filename)
+        : null;
+      aiDecision = await evaluateSpecialistCertificate({
+        specialistData: parsedSpecialistData || {},
+        file: req.file,
+        filePath: certificatePath
+      });
+      status = aiDecision.status;
     }
 
     const user = await User.create({
@@ -51,15 +116,6 @@ const register = async (req, res) => {
 
     // إذا specialist، أنشئ ملف specialist
     if (finalRole === 'specialist' && specialistData) {
-      let parsedSpecialistData = specialistData;
-      if (typeof specialistData === 'string') {
-        try {
-          parsedSpecialistData = JSON.parse(specialistData);
-        } catch (e) {
-          console.error('Failed to parse specialistData JSON:', e);
-        }
-      }
-
       const certificatePath = req.file
         ? `/uploads/certificates/${req.file.filename}`
         : null;
@@ -74,8 +130,8 @@ const register = async (req, res) => {
           education: parsedSpecialistData.education || '',
           languages: JSON.stringify(parsedSpecialistData.languages || ['Arabic', 'English']),
           session_price: parsedSpecialistData.sessionPrice || 50.0,
-          is_verified: false, // ينتظر موافقة الأدمن
-          is_available: false,
+          is_verified: status === 'accepted', // ينتظر موافقة الأدمن
+          is_available: status === 'accepted',
           rating: 0.0,
           total_reviews: 0,
           certificate_file: certificatePath,
@@ -100,11 +156,24 @@ const register = async (req, res) => {
       }
     }
 
+    try {
+      if (finalRole !== 'specialist') {
+        await createNotification(
+          'new_patient_signup',
+          'New patient registration',
+          `New patient signed up: ${name} (${email})`,
+          { user_id: user.user_id, role: finalRole, status }
+        );
+      }
+    } catch (notifyError) {
+      console.error('Failed to create admin notification for signup:', notifyError);
+    }
+
     let message = "User registered successfully";
-    if (status === 'pending') {
-      message = finalRole === 'specialist' 
-        ? "Registration successful! Your specialist account is pending admin approval."
-        : "Registration successful! Your account is pending admin approval.";
+    if (finalRole === 'specialist') {
+      message = status === 'accepted'
+        ? "Registration successful."
+        : "Registration rejected. The certificate did not match specialist requirements.";
     }
 
     res.status(201).json({ message, user_id: user.user_id, status, role: finalRole });

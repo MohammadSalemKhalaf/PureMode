@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:just_audio/just_audio.dart';
 import '../services/recommendation_service.dart';
 import '../models/mood_models.dart';
 
@@ -22,9 +22,11 @@ class MusicPlayerScreen extends StatefulWidget {
 
 class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
   final RecommendationService _recommendationService = RecommendationService();
+  final AudioPlayer _audioPlayer = AudioPlayer();
   List<Map<String, dynamic>> allMusic = [];
   bool isLoading = true;
   bool isSaving = false;
+  bool _isPlaying = false;
   String? currentPlayingUrl;
 
   @override
@@ -32,6 +34,26 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
     super.initState();
     currentPlayingUrl = widget.initialMusicUrl;
     loadMusic();
+    _audioPlayer.setVolume(1.0);
+    _audioPlayer.playerStateStream.listen((state) {
+      if (!mounted) return;
+      setState(() {
+        _isPlaying = state.playing;
+      });
+      if (state.processingState == ProcessingState.completed) {
+        _audioPlayer.seek(Duration.zero);
+        if (!mounted) return;
+        setState(() {
+          _isPlaying = false;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
   }
 
   Future<void> _markAsCompleted() async {
@@ -116,19 +138,62 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
 
   Future<void> playMusic(String url) async {
     try {
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final lowerUrl = url.toLowerCase();
+      if (lowerUrl.startsWith('asset://')) {
+        final assetPath = url.replaceFirst('asset://', '');
+        if (currentPlayingUrl == url && _isPlaying) {
+          await _audioPlayer.pause();
+          if (!mounted) return;
+          setState(() {
+            _isPlaying = false;
+          });
+          return;
+        }
+
+        await _audioPlayer.setLoopMode(LoopMode.one);
+        await _audioPlayer.setAsset(assetPath);
+        await _audioPlayer.play();
+        if (!mounted) return;
         setState(() {
           currentPlayingUrl = url;
+          _isPlaying = true;
         });
-      } else {
-        throw 'Cannot play music';
+        return;
       }
+
+      if (lowerUrl.contains('youtube.com') || lowerUrl.contains('youtu.be')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('This track is not available for in-app playback.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (currentPlayingUrl == url && _isPlaying) {
+        await _audioPlayer.pause();
+        if (!mounted) return;
+        setState(() {
+          _isPlaying = false;
+        });
+        return;
+      }
+
+      if (currentPlayingUrl != url) {
+        await _audioPlayer.setUrl(url);
+      }
+
+      await _audioPlayer.play();
+      if (!mounted) return;
+      setState(() {
+        currentPlayingUrl = url;
+        _isPlaying = true;
+      });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error playing music: $e'),
+          content: Text('Audio not available for in-app playback.'),
           backgroundColor: Colors.red,
         ),
       );
@@ -247,9 +312,9 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
                         itemCount: allMusic.length,
                         itemBuilder: (context, index) {
                           final music = allMusic[index];
-                          final isPlaying =
-                              currentPlayingUrl == music['url'];
-                          return _buildMusicCard(music, isPlaying);
+                          final isItemPlaying =
+                              currentPlayingUrl == music['url'] && _isPlaying;
+                          return _buildMusicCard(music, isItemPlaying);
                         },
                       ),
                     ),
@@ -301,6 +366,7 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
   }
 
   Widget _buildMusicCard(Map<String, dynamic> music, bool isPlaying) {
+    final iconText = _iconForMusic(music);
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -339,7 +405,7 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
                   ),
                   child: Center(
                     child: Text(
-                      music['icon'] ?? '🎵',
+                      iconText,
                       style: TextStyle(fontSize: 26),
                     ),
                   ),
@@ -391,5 +457,15 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
         ),
       ),
     );
+  }
+
+  String _iconForMusic(Map<String, dynamic> music) {
+    final title = (music['title'] ?? '').toString().toLowerCase();
+    if (title.contains('rain')) return '🌧️';
+    if (title.contains('piano')) return '🎹';
+    if (title.contains('nature')) return '🌿';
+    if (title.contains('meditation')) return '🧘';
+    if (title.contains('ocean') || title.contains('wave')) return '🌊';
+    return '🎵';
   }
 }

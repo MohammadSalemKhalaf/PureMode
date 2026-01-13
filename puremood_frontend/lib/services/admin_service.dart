@@ -161,8 +161,20 @@ class AdminService {
   Future<void> markAllNotificationsAsRead() async {
     try {
       final token = await _getToken();
-      await http.post(
-        Uri.parse('http://10.0.2.2:5000/api/notifications/mark-all-read'),
+      await http.put(
+        Uri.parse('http://10.0.2.2:5000/api/notifications/read-all'),
+        headers: _getHeaders(token),
+      );
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  Future<void> markNotificationAsRead(int notificationId) async {
+    try {
+      final token = await _getToken();
+      await http.put(
+        Uri.parse('http://10.0.2.2:5000/api/notifications/$notificationId/read'),
         headers: _getHeaders(token),
       );
     } catch (e) {

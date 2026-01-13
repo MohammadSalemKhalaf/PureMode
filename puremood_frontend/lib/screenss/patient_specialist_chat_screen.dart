@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/booking_chat_service.dart';
 
@@ -24,23 +25,39 @@ class PatientSpecialistChatScreen extends StatefulWidget {
   State<PatientSpecialistChatScreen> createState() => _PatientSpecialistChatScreenState();
 }
 
-class _PatientSpecialistChatScreenState extends State<PatientSpecialistChatScreen> {
+class _PatientSpecialistChatScreenState extends State<PatientSpecialistChatScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _controller = TextEditingController();
   final List<_LocalMessage> _messages = [];
   final BookingChatService _chatService = BookingChatService();
   bool _isLoading = false;
   final ScrollController _scrollController = ScrollController();
+  late final AnimationController _typingController;
+  final FocusNode _inputFocus = FocusNode();
+  bool _showTyping = false;
 
   @override
   void initState() {
     super.initState();
+    _typingController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat();
+    _inputFocus.addListener(() {
+      final shouldShow = _inputFocus.hasFocus && _controller.text.trim().isNotEmpty;
+      if (shouldShow != _showTyping) {
+        setState(() => _showTyping = shouldShow);
+      }
+    });
     _loadMessages();
   }
 
   @override
   void dispose() {
+    _typingController.dispose();
     _scrollController.dispose();
     _controller.dispose();
+    _inputFocus.dispose();
     super.dispose();
   }
 
@@ -112,6 +129,9 @@ class _PatientSpecialistChatScreenState extends State<PatientSpecialistChatScree
     if (text.isEmpty) return;
 
     _controller.clear();
+    if (_showTyping) {
+      setState(() => _showTyping = false);
+    }
 
     try {
       final dto = await _chatService.sendMessage(
@@ -132,6 +152,50 @@ class _PatientSpecialistChatScreenState extends State<PatientSpecialistChatScree
         SnackBar(content: Text('Failed to send message: $e')),
       );
     }
+  }
+
+  void _handleTypingChanged(String value) {
+    final shouldShow = _inputFocus.hasFocus && value.trim().isNotEmpty;
+    if (shouldShow != _showTyping) {
+      setState(() => _showTyping = shouldShow);
+      if (shouldShow) {
+        _scrollToBottom();
+      }
+    }
+  }
+
+  Widget _buildTypingIndicator() {
+    return AnimatedOpacity(
+      opacity: _showTyping ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 180),
+      child: _showTyping
+          ? Container(
+              margin: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _TypingDot(controller: _typingController, delay: 0.0),
+                  const SizedBox(width: 4),
+                  _TypingDot(controller: _typingController, delay: 0.2),
+                  const SizedBox(width: 4),
+                  _TypingDot(controller: _typingController, delay: 0.4),
+                ],
+              ),
+            )
+          : const SizedBox.shrink(),
+    );
   }
 
   @override
@@ -320,6 +384,14 @@ class _PatientSpecialistChatScreenState extends State<PatientSpecialistChatScree
                         },
                       ),
           ),
+          if (_showTyping)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                child: _buildTypingIndicator(),
+              ),
+            ),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -346,6 +418,8 @@ class _PatientSpecialistChatScreenState extends State<PatientSpecialistChatScree
                   Expanded(
                     child: TextField(
                       controller: _controller,
+                      focusNode: _inputFocus,
+                      onChanged: _handleTypingChanged,
                       decoration: InputDecoration(
                         hintText: 'Type a message...',
                         hintStyle: GoogleFonts.poppins(color: Colors.grey[500]),
@@ -388,4 +462,27 @@ class _LocalMessage {
     required this.isMe,
     required this.time,
   });
+}
+
+class _TypingDot extends StatelessWidget {
+  final AnimationController controller;
+  final double delay;
+
+  const _TypingDot({required this.controller, required this.delay});
+
+  @override
+  Widget build(BuildContext context) {
+    final animation = CurvedAnimation(
+      parent: controller,
+      curve: Interval(delay, delay + 0.6, curve: Curves.easeInOut),
+    );
+
+    return FadeTransition(
+      opacity: animation,
+      child: const CircleAvatar(
+        radius: 4,
+        backgroundColor: Color(0xFF008080),
+      ),
+    );
+  }
 }

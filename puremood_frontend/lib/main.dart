@@ -16,6 +16,7 @@ import 'screenss/admin_posts_screen.dart';
 import 'screenss/admin_health_screen.dart';
 import 'screenss/admin_profile_screen.dart';
 import 'screenss/admin_settings_screen.dart';
+import 'screenss/admin_notifications_screen.dart';
 import 'services/notification_service.dart';
 import 'services/firebase_token_service.dart';
 import 'services/navigation_service.dart';
@@ -125,6 +126,8 @@ class PureMoodApp extends StatelessWidget {
               '/admin/health': (context) => AdminHealthScreen(),
               '/admin/profile': (context) => AdminProfileScreen(),
               '/admin/settings': (context) => AdminSettingsScreen(),
+              '/admin/notifications': (context) =>
+                  AdminNotificationsScreen(),
             },
           );
         },

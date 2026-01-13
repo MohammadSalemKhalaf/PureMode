@@ -112,10 +112,11 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
       tween: Tween(begin: 0.0, end: 1.0),
       curve: Curves.easeOutBack,
       builder: (context, value, child) {
+        final safeValue = value.clamp(0.0, 1.0);
         return Transform.translate(
-          offset: Offset(0, 30 * (1 - value)),
+          offset: Offset(0, 30 * (1 - safeValue)),
           child: Opacity(
-            opacity: value,
+            opacity: safeValue,
             child: child,
           ),
         );

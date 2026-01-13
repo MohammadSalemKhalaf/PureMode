@@ -117,15 +117,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
             if (!mounted) return;
 
+            final messageText = (res['message'] ?? 'Registration failed').toString();
+            final messageLower = messageText.toLowerCase();
+            final isSuccess = (res['status'] == 'accepted') || messageLower.contains('successful');
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  res['message'] ?? 'Registration failed',
+                  messageText,
                   style: GoogleFonts.poppins(),
                 ),
-                backgroundColor: res['message']?.contains('successfully') ?? false
-                    ? Colors.green
-                    : Colors.red,
+                backgroundColor: isSuccess ? Colors.green : Colors.red,
               ),
             );
 

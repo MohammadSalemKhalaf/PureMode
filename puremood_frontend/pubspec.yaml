@@ -44,3 +44,5 @@ flutter:
   # إذا عندك صور تضيفها هنا
   # assets:
   #   - images/
+  assets:
+    - assets/audio/

@@ -191,6 +191,18 @@ const deleteUserAdmin = async (req, res) => {
     }
 
     await user.destroy();
+
+    try {
+      await createNotification(
+        'user_deleted',
+        'User deleted',
+        `User deleted by admin: ${user.name} (${user.email})`,
+        { user_id: user.user_id, role: user.role, deleted_by: req.user.user_id }
+      );
+    } catch (notifyError) {
+      console.error('Failed to create admin notification for user deletion:', notifyError);
+    }
+
     res.json({ message: 'User deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });

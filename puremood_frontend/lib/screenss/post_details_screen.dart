@@ -118,6 +118,14 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
         title: Text('Post Details', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
         backgroundColor: const Color(0xFF008080),
         foregroundColor: Colors.white,
+        actions: post != null && post?['can_delete'] == true
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: _confirmDeletePost,
+                ),
+              ]
+            : null,
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF008080)))
@@ -141,13 +149,15 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
     final userName = post!['User']?['name'] ?? 'Anonymous';
     final createdAt = _parseCreatedAt(post!['created_at']);
     final timeAgo = timeago.format(createdAt);
+    final category = (post!['category'] ?? 'general').toString();
 
     return Container(
       margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2F0EF)),
         boxShadow: [
           BoxShadow(
             color: Colors.teal.withOpacity(0.1),
@@ -181,11 +191,26 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                     Text(
                       timeAgo,
                       style: GoogleFonts.poppins(
-                        fontSize: 12,
+                        fontSize: 11,
                         color: Colors.grey.shade600,
                       ),
                     ),
                   ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF008080).withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  category,
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF008080),
+                  ),
                 ),
               ),
             ],
@@ -194,34 +219,18 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
           Text(
             post!['title'] ?? '',
             style: GoogleFonts.poppins(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade800,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF203B3A),
             ),
           ),
           const SizedBox(height: 12),
           Text(
             post!['content'] ?? '',
             style: GoogleFonts.poppins(
-              fontSize: 15,
+              fontSize: 14,
               color: Colors.grey.shade700,
-              height: 1.6,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.teal.shade50,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              post!['category'] ?? 'general',
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Colors.teal.shade700,
-              ),
+              height: 1.5,
             ),
           ),
         ],
@@ -260,20 +269,39 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
   Widget _buildAddCommentField() {
     return Column(
       children: [
-        TextField(
-          controller: _commentController,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: 'Write a comment...',
-            hintStyle: GoogleFonts.poppins(color: Colors.grey.shade400),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.teal.shade200),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF008080), width: 2),
-            ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFE2F0EF)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _commentController,
+                  minLines: 1,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: 'Write a comment...',
+                    hintStyle: GoogleFonts.poppins(color: Colors.grey.shade400),
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: _addComment,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF008080),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Text('Send', style: GoogleFonts.poppins(color: Colors.white)),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 12),
@@ -289,21 +317,51 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
               activeColor: const Color(0xFF008080),
             ),
             Text('Post anonymously', style: GoogleFonts.poppins(fontSize: 14)),
-            const Spacer(),
-            ElevatedButton(
-              onPressed: _addComment,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF008080),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: Text('Comment', style: GoogleFonts.poppins(color: Colors.white)),
-            ),
           ],
         ),
       ],
     );
+  }
+
+  void _confirmDeletePost() {
+    if (post == null) return;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Post', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+        content: Text('Are you sure you want to delete this post?', style: GoogleFonts.poppins()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deletePost();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text('Delete', style: GoogleFonts.poppins(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deletePost() async {
+    if (post == null) return;
+    final postId = post?['post_id'];
+    if (postId == null) return;
+    try {
+      await _communityService.deletePost(postId);
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
   Widget _buildCommentCard(Map<String, dynamic> comment) {

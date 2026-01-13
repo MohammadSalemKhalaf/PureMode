@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const EmailVerification = require('../models/EmailVerification');
+const User = require('../models/User');
+const bcrypt = require('bcrypt');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../config/emailConfig');
 
 // توليد رمز تحقق عشوائي من 6 أرقام
@@ -74,10 +76,9 @@ router.post('/verify-code', async (req, res) => {
     const { email, code } = req.body;
 
     if (!email || !code) {
-      return res.status(400).json({ message: 'الرجاء إدخال البريد الإلكتروني ورمز التحقق' });
+      return res.status(400).json({ message: 'Email and verification code are required.' });
     }
 
-    // البحث عن رمز التحقق
     const verification = await EmailVerification.findOne({
       where: {
         email,
@@ -89,37 +90,34 @@ router.post('/verify-code', async (req, res) => {
 
     if (!verification) {
       return res.status(400).json({ 
-        message: 'رمز التحقق غير صحيح',
+        message: 'Invalid verification code.',
         success: false 
       });
     }
 
-    // التحقق من انتهاء الصلاحية
     if (new Date() > new Date(verification.expires_at)) {
       return res.status(400).json({ 
-        message: 'انتهت صلاحية رمز التحقق. الرجاء طلب رمز جديد',
+        message: 'Verification code has expired. Please request a new one.',
         success: false 
       });
     }
 
-    // تحديث الرمز كمستخدم
     verification.is_used = true;
     await verification.save();
 
     res.status(200).json({ 
-      message: 'تم التحقق من البريد الإلكتروني بنجاح',
+      message: 'Email verified successfully.',
       success: true 
     });
   } catch (error) {
-    console.error('خطأ في التحقق من الرمز:', error);
+    console.error('Error verifying code:', error);
     res.status(500).json({ 
-      message: 'حدث خطأ في التحقق من الرمز',
+      message: 'Server error while verifying code.',
       error: error.message 
     });
   }
 });
 
-// إرسال رمز استعادة كلمة المرور
 router.post('/send-reset-code', async (req, res) => {
   try {
     const { email } = req.body;
@@ -170,6 +168,51 @@ router.post('/send-reset-code', async (req, res) => {
       message: 'حدث خطأ في إرسال رمز الاستعادة',
       error: error.message 
     });
+  }
+});
+
+// Reset password using email + code
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+
+    if (!email || !code || !newPassword) {
+      return res.status(400).json({ message: 'email, code, and newPassword are required' });
+    }
+
+    const verification = await EmailVerification.findOne({
+      where: {
+        email,
+        verification_code: code,
+        type: 'password_reset',
+        is_used: false
+      }
+    });
+
+    if (!verification) {
+      return res.status(400).json({ message: 'Invalid reset code' });
+    }
+
+    if (new Date() > new Date(verification.expires_at)) {
+      return res.status(400).json({ message: 'Reset code has expired' });
+    }
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password_hash = hashedPassword;
+    await user.save();
+
+    verification.is_used = true;
+    await verification.save();
+
+    res.status(200).json({ message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

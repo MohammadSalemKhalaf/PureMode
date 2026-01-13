@@ -426,6 +426,8 @@ class FirebaseTokenService {
         print('   booking_id=$bookingId, sender_role=$senderRole, session_id=$sessionId');
         // هنا يمكنك لاحقًا استخدام NavigationService/GlobalKey لفتح شاشة الشات الخاصة بالحجز
       }
+
+      await handleFirebaseMessageData(message.data);
     });
   }
   // معالج رسائل الخلفية

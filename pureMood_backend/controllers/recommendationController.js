@@ -19,11 +19,11 @@ const WARM_DRINKS = [
 
 // 🎵 Relaxing music list
 const RELAXING_MUSIC = [
-  { title: 'Rain Sounds', icon: '🌧️', duration: '60 min', url: 'https://www.youtube.com/watch?v=q76bMs-NwRk' },
-  { title: 'Calm Piano Music', icon: '🎹', duration: '45 min', url: 'https://www.youtube.com/watch?v=_AOJhuU_hus' },
-  { title: 'Nature Sounds', icon: '🌿', duration: '30 min', url: 'https://www.youtube.com/watch?v=eKFTSSKCzWA' },
-  { title: 'Meditation Music', icon: '🧘', duration: '20 min', url: 'https://www.youtube.com/watch?v=lFcSrYw-ARY' },
-  { title: 'Ocean Waves', icon: '🌊', duration: '60 min', url: 'https://www.youtube.com/watch?v=WHPEKLQID4U' }
+  { title: 'Rain Sounds', icon: '???', duration: '20 sec', url: 'asset://assets/audio/rain_sounds.wav' },
+  { title: 'Calm Piano', icon: '??', duration: '20 sec', url: 'asset://assets/audio/calm_piano.wav' },
+  { title: 'Nature Breeze', icon: '??', duration: '20 sec', url: 'asset://assets/audio/nature_breeze.wav' },
+  { title: 'Meditation Drone', icon: '??', duration: '20 sec', url: 'asset://assets/audio/meditation_drone.wav' },
+  { title: 'Ocean Waves', icon: '??', duration: '20 sec', url: 'asset://assets/audio/ocean_waves.wav' }
 ];
 
 // 🏃 Exercises list
@@ -33,8 +33,8 @@ const EXERCISES = [
   { name: 'Stretching', icon: '🤸', duration: '10 min', calories: '40 calories', benefits: 'Reduces muscle tension and improves flexibility' },
   { name: 'Jump Rope', icon: '🪢', duration: '10 min', calories: '120 calories', benefits: 'Excellent cardio workout' },
   { name: 'Home Strength Training', icon: '💪', duration: '20 min', calories: '100 calories', benefits: 'Build muscle and increase strength' },
-  { name: 'Cycling', icon: '🚴', duration: '30 min', calories: '200 calories', benefits: 'Strengthens heart and legs' },
-  { name: 'Swimming', icon: '🏊', duration: '30 min', calories: '250 calories', benefits: 'Full-body workout' },
+  { name: 'Cycling', icon: '🚴', duration: '20 sec', calories: '200 calories', benefits: 'Strengthens heart and legs' },
+  { name: 'Swimming', icon: '🏊', duration: '20 sec', calories: '250 calories', benefits: 'Full-body workout' },
   { name: 'Dancing', icon: '💃', duration: '20 min', calories: '150 calories', benefits: 'Fun and calorie-burning' },
   { name: 'Push-ups', icon: '🤛', duration: '5 min', calories: '50 calories', benefits: 'Chest and arm strength' },
   { name: 'Abdominal Workout', icon: '🔥', duration: '10 min', calories: '60 calories', benefits: 'Tighten abs and strengthen muscles' }
@@ -81,22 +81,22 @@ const SOCIAL_ACTIVITIES = [
   { name: 'Family outing', icon: '👨‍👩‍👧‍👦', duration: '1 hour', benefits: 'Enhance family connections' },
   { name: 'Join a hobby group', icon: '🎨', duration: 'Weekly', benefits: 'Make new friends' },
   { name: 'Volunteer for charity', icon: '🤝', duration: 'As desired', benefits: 'Sense of giving and happiness' },
-  { name: 'Coffee with a friend', icon: '☕', duration: '30 min', benefits: 'Social support and sharing feelings' },
+  { name: 'Coffee with a friend', icon: '☕', duration: '20 sec', benefits: 'Social support and sharing feelings' },
   { name: 'Group gaming', icon: '🎮', duration: '1 hour', benefits: 'Fun and shared entertainment' },
   { name: 'Attend a social event', icon: '🎉', duration: 'Depends on event', benefits: 'Expand your social circle' },
-  { name: 'Help a neighbor', icon: '🏘️', duration: '30 min', benefits: 'Strengthen the local community' }
+  { name: 'Help a neighbor', icon: '🏘️', duration: '20 sec', benefits: 'Strengthen the local community' }
 ];
 
 // 🎯 General activities list
 const GENERAL_ACTIVITIES = [
   { name: 'Daily journaling', icon: '📝', duration: '15 min', benefits: 'Release emotions and organize thoughts' },
-  { name: 'Drawing or coloring', icon: '🎨', duration: '30 min', benefits: 'Creative expression and relaxation' },
-  { name: 'Gardening', icon: '🌱', duration: '30 min', benefits: 'Connect with nature and a sense of achievement' },
+  { name: 'Drawing or coloring', icon: '🎨', duration: '20 sec', benefits: 'Creative expression and relaxation' },
+  { name: 'Gardening', icon: '🌱', duration: '20 sec', benefits: 'Connect with nature and a sense of achievement' },
   { name: 'Cooking', icon: '🍳', duration: '45 min', benefits: 'Creativity and healthy nutrition' },
   { name: 'Photography', icon: '📸', duration: 'As desired', benefits: 'Appreciate beauty and creativity' },
-  { name: 'Learn something new', icon: '🎓', duration: '30 min', benefits: 'Stimulate the brain and personal growth' },
+  { name: 'Learn something new', icon: '🎓', duration: '20 sec', benefits: 'Stimulate the brain and personal growth' },
   { name: 'Tidy your room', icon: '🧹', duration: '20 min', benefits: 'Organized space and clear mind' },
-  { name: 'Listen to a podcast', icon: '🎧', duration: '30 min', benefits: 'Learning and entertainment' },
+  { name: 'Listen to a podcast', icon: '🎧', duration: '20 sec', benefits: 'Learning and entertainment' },
   { name: 'Practice a hobby', icon: '🎸', duration: 'As desired', benefits: 'Fun and creativity' },
   { name: 'Prepare a goals list', icon: '✅', duration: '15 min', benefits: 'Clarity and future vision' }
 ];
@@ -165,7 +165,16 @@ const MOOD_RECOMMENDATIONS = {
     { title: 'Motivational music', description: 'Listen to active, motivating music', category: 'music', icon: '🎸' }
   ],
   
-  // Lonely mood 🥺
+      // Confused mood
+  '\u{1F615}': [
+    { title: 'Mindful breathing', description: 'Take a minute for deep breathing and focus on the present moment', category: 'breathing', icon: '\u{1FAC1}' },
+    { title: 'Move a little', description: 'Do a simple exercise or quick stretch', category: 'exercise', icon: '\u{1F3C3}' },
+    { title: 'Write your feelings', description: 'Express your thoughts on paper to clear your mind', category: 'activity', icon: '\u{270D}\u{FE0F}' },
+    { title: 'Drink water', description: 'Hydration supports focus and clarity', category: 'food', icon: '\u{1F4A7}' },
+    { title: 'Listen to music', description: 'Choose calm music to reset your mind', category: 'music', icon: '\u{1F3B5}' }
+  ],
+
+// Lonely mood 🥺
   '🥺': [
     { title: 'Call a friend', description: 'Connect with someone you love, even with a short message', category: 'social', icon: '📞' },
     { title: 'Join an online community', description: 'Participate in a group with similar interests', category: 'social', icon: '👥' },

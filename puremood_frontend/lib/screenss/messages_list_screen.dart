@@ -161,7 +161,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
         children: [
           Container(
             color: const Color(0xFF008080),
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -181,7 +181,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
                   hintStyle: GoogleFonts.poppins(color: Colors.grey[500]),
                   prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
                 ),
               ),
             ),
@@ -197,7 +197,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         itemCount: _filteredItems.length,
                         itemBuilder: (context, index) {
                           final item = _filteredItems[index];
@@ -207,38 +207,38 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
                           return GestureDetector(
                             onTap: () => _openChat(item),
                             child: Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.all(12),
+                              margin: const EdgeInsets.only(bottom: 14),
+                              padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(18),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.06),
-                                    blurRadius: 10,
+                                    blurRadius: 12,
                                     offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 24,
-                              backgroundColor: const Color(0xFFD6F1EC),
-                              backgroundImage: item.avatarUrl != null
-                                  ? NetworkImage(item.avatarUrl!)
-                                  : null,
-                              child: item.avatarUrl == null
-                                  ? Text(
-                                      initials,
-                                      style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF008080),
-                                      ),
-                                    )
-                                  : null,
-                            ),
-                                  const SizedBox(width: 12),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 26,
+                                    backgroundColor: const Color(0xFFD6F1EC),
+                                    backgroundImage: item.avatarUrl != null
+                                        ? NetworkImage(item.avatarUrl!)
+                                        : null,
+                                    child: item.avatarUrl == null
+                                        ? Text(
+                                            initials,
+                                            style: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w700,
+                                              color: const Color(0xFF008080),
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 14),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,18 +246,18 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
                                         Text(
                                           item.displayName,
                                           style: GoogleFonts.poppins(
-                                            fontSize: 14,
+                                            fontSize: 15,
                                             fontWeight: FontWeight.w600,
                                             color: const Color(0xFF008080),
                                           ),
                                         ),
-                                        const SizedBox(height: 4),
+                                        const SizedBox(height: 6),
                                         Text(
                                           item.lastMessage,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: GoogleFonts.poppins(
-                                            fontSize: 12,
+                                            fontSize: 13,
                                             color: Colors.grey[600],
                                           ),
                                         ),
@@ -267,7 +267,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
                                   Text(
                                     _formatTime(item.lastMessageTime),
                                     style: GoogleFonts.poppins(
-                                      fontSize: 11,
+                                      fontSize: 12,
                                       color: Colors.grey[500],
                                     ),
                                   ),
@@ -279,6 +279,11 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
                       ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF008080),
+        onPressed: () {},
+        child: const Icon(Icons.chat_bubble_outline, color: Colors.white),
       ),
     );
   }

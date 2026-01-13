@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:puremood_frontend/services/admin_service.dart';
@@ -20,7 +20,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   bool loading = true;
   String error = '';
   int notificationCount = 0;
-  List<dynamic> realNotifications = []; // الإشعارات الحقيقية من API
+  List<dynamic> realNotifications = []; // Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ø§Ù„Ø­Ù‚ÙŠÙ‚ÙŠØ© Ù…Ù† API
   Timer? _notifTimer;
 
   @override
@@ -43,7 +43,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       builder: (dialogContext) => _CreateAdminDialog(adminService: _adminService),
     );
 
-    // انتظار قصير للتأكد من إغلاق الحوار تماماً
+    // Ø§Ù†ØªØ¸Ø§Ø± Ù‚ØµÙŠØ± Ù„Ù„ØªØ£ÙƒØ¯ Ù…Ù† Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„Ø­ÙˆØ§Ø± ØªÙ…Ø§Ù…Ø§Ù‹
     await Future.delayed(Duration(milliseconds: 100));
     
     if (!mounted) return;
@@ -51,7 +51,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     if (result == true) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Admin created successfully ✅', style: GoogleFonts.poppins()),
+          content: Text('Admin created successfully âœ…', style: GoogleFonts.poppins()),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 3),
         ),
@@ -109,12 +109,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Future<void> _loadNotificationsCount() async {
     try {
-      print('🔔 Loading notifications count...');
+      print('ðŸ”” Loading notifications count...');
       final prev = notificationCount;
       final stats = await _adminService.getNotificationStats();
-      print('📊 Stats received: $stats');
-      final unreadCount = stats['unread_count'] ?? 0;
-      print('✅ Unread count: $unreadCount');
+      print('ðŸ“Š Stats received: $stats');
+      final unreadCount = stats['unread'] ?? stats['unread_count'] ?? 0;
+      print('âœ… Unread count: $unreadCount');
       if (!mounted) return;
       setState(() {
         notificationCount = unreadCount;
@@ -125,7 +125,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         await cancelAdminRegistrationNotification();
       }
     } catch (e) {
-      print('❌ Error loading notifications count: $e');
+      print('âŒ Error loading notifications count: $e');
       // Do not call setState here to avoid setState after dispose
     }
   }
@@ -175,7 +175,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
         ),
         actions: [
-          // زر الإشعارات
+          // Ø²Ø± Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª
           _buildNotificationButton(),
           SizedBox(width: 8),
 
@@ -186,7 +186,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               _loadNotificationsCount();
               _loadUserInfo();
             },
-            tooltip: 'Refresh',
+            tooltip: 'Notifications',
           ),
           SizedBox(width: 8),
           _buildProfileMenu(),
@@ -201,7 +201,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  // زر الإشعارات الجديد مع Dropdown
+  // Ø²Ø± Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ø§Ù„Ø¬Ø¯ÙŠØ¯ Ù…Ø¹ Dropdown
   Widget _buildNotificationButton() {
     return Stack(
       clipBehavior: Clip.none,
@@ -211,7 +211,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           onPressed: () {
             _showNotificationDropdown(context);
           },
-          tooltip: 'الإشعارات',
+          tooltip: 'Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª',
         ),
         if (notificationCount > 0)
           Positioned(
@@ -293,7 +293,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '$totalBadges badges • $totalChallenges challenges',
+                        '$totalBadges badges â€¢ $totalChallenges challenges',
                         style: GoogleFonts.poppins(
                           fontSize: 11,
                           color: subTextColor,
@@ -370,12 +370,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  // عرض قائمة الإشعارات المنسدلة (مثل الفيس بوك)
+  // Ø¹Ø±Ø¶ Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ø§Ù„Ù…Ù†Ø³Ø¯Ù„Ø© (Ù…Ø«Ù„ Ø§Ù„ÙÙŠØ³ Ø¨ÙˆÙƒ)
   void _showNotificationDropdown(BuildContext context) async {
     final RenderBox renderBox = context.findRenderObject() as RenderBox;
     final offset = renderBox.localToGlobal(Offset.zero);
 
-    // جلب الإشعارات من API
+    // Ø¬Ù„Ø¨ Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ù…Ù† API
     try {
       final notifs = await _adminService.getNotifications(limit: 5);
       if (mounted) {
@@ -384,16 +384,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         });
       }
       
-      // ✅ تحديد كل الإشعارات كمقروءة تلقائياً عند فتح القائمة
-      if (realNotifications.isNotEmpty) {
-        await _adminService.markAllNotificationsAsRead();
-        if (mounted) {
-          setState(() {
-            notificationCount = 0; // العداد يروح فوراً
-          });
-        }
-        await cancelAdminRegistrationNotification();
-      }
+      // âœ… ØªØ­Ø¯ÙŠØ¯ ÙƒÙ„ Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª ÙƒÙ…Ù‚Ø±ÙˆØ¡Ø© ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹ Ø¹Ù†Ø¯ ÙØªØ­ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©
+      // Keep unread count until user taps a notification or marks all as read.
     } catch (e) {
       print('Error loading notifications: $e');
     }
@@ -401,8 +393,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     showMenu(
       context: context,
       position: RelativeRect.fromLTRB(
-        MediaQuery.of(context).size.width - 320, // من اليمين
-        offset.dy + 60, // تحت الـ AppBar
+        MediaQuery.of(context).size.width - 320, // Ù…Ù† Ø§Ù„ÙŠÙ…ÙŠÙ†
+        offset.dy + 60, // ØªØ­Øª Ø§Ù„Ù€ AppBar
         20,
         0,
       ),
@@ -416,12 +408,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ),
       ],
     ).then((_) {
-      // عند إغلاق القائمة، تأكد إن العداد صفر
+      // Ø¹Ù†Ø¯ Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©ØŒ ØªØ£ÙƒØ¯ Ø¥Ù† Ø§Ù„Ø¹Ø¯Ø§Ø¯ ØµÙØ±
       _loadNotificationsCount();
     });
   }
 
-  // محتوى القائمة المنسدلة
+  // Ù…Ø­ØªÙˆÙ‰ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ù…Ù†Ø³Ø¯Ù„Ø©
   Widget _buildNotificationDropdownContent() {
     return Container(
       width: 320,
@@ -440,7 +432,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
             ),
             child: Text(
-              'الإشعارات',
+              'Notifications',
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -460,7 +452,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           InkWell(
             onTap: () {
               Navigator.pop(context);
-              // يمكنك إضافة صفحة لعرض كل الإشعارات لاحقاً
+              Navigator.pushNamed(context, '/admin/notifications');
             },
             child: Padding(
               padding: EdgeInsets.all(12),
@@ -468,7 +460,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'عرض كل الإشعارات',
+                    'View all notifications',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -499,7 +491,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
           SizedBox(height: 16),
           Text(
-            'لا توجد إشعارات جديدة',
+            'No new notifications',
             style: GoogleFonts.poppins(
               fontSize: 16,
               color: Colors.grey[600],
@@ -511,7 +503,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildNotificationsList() {
-    // استخدام الإشعارات الحقيقية من API
+    // Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ø§Ù„Ø­Ù‚ÙŠÙ‚ÙŠØ© Ù…Ù† API
     if (realNotifications.isEmpty) {
       return _buildEmptyNotifications();
     }
@@ -525,7 +517,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         final notification = realNotifications[index];
         final type = notification['type'] ?? '';
         
-        // تحديد الأيقونة واللون حسب نوع الإشعار
+        // ØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ø£ÙŠÙ‚ÙˆÙ†Ø© ÙˆØ§Ù„Ù„ÙˆÙ† Ø­Ø³Ø¨ Ù†ÙˆØ¹ Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±
         IconData icon = Icons.notifications_outlined;
         Color color = Colors.grey;
         String route = '/admin/pending';
@@ -545,7 +537,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         }
 
         return _buildNotificationItem(
-          title: notification['title'] ?? 'إشعار',
+          title: notification['title'] ?? 'Ø¥Ø´Ø¹Ø§Ø±',
           message: notification['message'] ?? '',
           time: _formatNotificationTime(notification['created_at']),
           icon: icon,
@@ -555,6 +547,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Navigator.pop(context);
             Future.microtask(() {
               if (!mounted) return;
+              final notificationId = notification['notification_id'];
+              if (notificationId != null && notification['is_read'] != true) {
+                _adminService.markNotificationAsRead(notificationId).then((_) {
+                  if (mounted) {
+                    setState(() {
+                      notification['is_read'] = true;
+                      if (notificationCount > 0) {
+                        notificationCount -= 1;
+                      }
+                    });
+                  }
+                }).catchError((e) {
+                  print('Error marking notification as read: $e');
+                });
+              }
               Navigator.pushNamed(this.context, route);
             });
           },
@@ -563,23 +570,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  // تنسيق وقت الإشعار
+  // ØªÙ†Ø³ÙŠÙ‚ ÙˆÙ‚Øª Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±
   String _formatNotificationTime(String? createdAt) {
     if (createdAt == null) return '';
-    
+
     try {
       final dateTime = DateTime.parse(createdAt);
       final now = DateTime.now();
       final difference = now.difference(dateTime);
 
       if (difference.inMinutes < 1) {
-        return 'الآن';
+        return 'Just now';
       } else if (difference.inMinutes < 60) {
-        return 'منذ ${difference.inMinutes} دقيقة';
+        return '${difference.inMinutes} min ago';
       } else if (difference.inHours < 24) {
-        return 'منذ ${difference.inHours} ساعة';
+        return '${difference.inHours} hr ago';
       } else if (difference.inDays < 7) {
-        return 'منذ ${difference.inDays} يوم';
+        return '${difference.inDays} day ago';
       } else {
         return '${dateTime.day}/${dateTime.month}';
       }
@@ -795,17 +802,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle('📊 System Overview', isDark),
+                  _buildSectionTitle('ðŸ“Š System Overview', isDark),
                   SizedBox(height: 16),
                   _buildStatsGrid(size, isDark),
                   SizedBox(height: 24),
-                  _buildSectionTitle('🎮 Engagement & Mood', isDark),
+                  _buildSectionTitle('ðŸŽ® Engagement & Mood', isDark),
                   SizedBox(height: 16),
                   _buildEngagementSection(isDark),
                   SizedBox(height: 32),
 
                   // Quick Actions
-                  _buildSectionTitle('⚡ Quick Actions', isDark),
+                  _buildSectionTitle('âš¡ Quick Actions', isDark),
                   SizedBox(height: 16),
                   _buildQuickActions(isDark),
                 ],
@@ -823,20 +830,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     String? resolvedPicture;
     if (rawPicture != null && rawPicture.isNotEmpty) {
-      // لو المسار نسبي مثل /uploads/..., أضيف له base URL مثل المستخدم العادي
+      // Ù„Ùˆ Ø§Ù„Ù…Ø³Ø§Ø± Ù†Ø³Ø¨ÙŠ Ù…Ø«Ù„ /uploads/..., Ø£Ø¶ÙŠÙ Ù„Ù‡ base URL Ù…Ø«Ù„ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø§Ù„Ø¹Ø§Ø¯ÙŠ
       final baseHost = _apiService.baseUrl.replaceFirst('/api/users', '');
       resolvedPicture = rawPicture.startsWith('http') ? rawPicture : '$baseHost$rawPicture';
     }
     final hour = DateTime.now().hour;
     String greeting = 'Good Morning';
-    String emoji = '🌅';
+    String emoji = 'ðŸŒ…';
 
     if (hour >= 12 && hour < 17) {
       greeting = 'Good Afternoon';
-      emoji = '☀️';
+      emoji = 'â˜€ï¸';
     } else if (hour >= 17) {
       greeting = 'Good Evening';
-      emoji = '🌙';
+      emoji = 'ðŸŒ™';
     }
 
     return Container(
@@ -1364,7 +1371,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     String? resolvedPicture;
     if (rawPicture != null && rawPicture.isNotEmpty) {
-      // لو المسار نسبي مثل /uploads/..., أضيف له base URL مثل باقي الشاشات
+      // Ù„Ùˆ Ø§Ù„Ù…Ø³Ø§Ø± Ù†Ø³Ø¨ÙŠ Ù…Ø«Ù„ /uploads/..., Ø£Ø¶ÙŠÙ Ù„Ù‡ base URL Ù…Ø«Ù„ Ø¨Ø§Ù‚ÙŠ Ø§Ù„Ø´Ø§Ø´Ø§Øª
       final baseHost = _apiService.baseUrl.replaceFirst('/api/users', '');
       resolvedPicture = rawPicture.startsWith('http') ? rawPicture : '$baseHost$rawPicture';
     }
@@ -1619,3 +1626,4 @@ class _CreateAdminDialogState extends State<_CreateAdminDialog> {
     }
   }
 }
+

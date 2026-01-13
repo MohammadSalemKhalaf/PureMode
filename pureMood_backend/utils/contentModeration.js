@@ -9,7 +9,8 @@ const badWordsArabic = [
 
 const badWordsEnglish = [
   // English bad words
-  'stupid', 'idiot', 'fool', 'moron', 'dumb', 'crazy', 'insane',
+  'stupid', 'stubid', 'stuped', 'stupied', 'stupidd',
+  'idiot', 'fool', 'moron', 'dumb', 'crazy', 'insane',
   'damn', 'hell', 'crap', 'shit', 'fuck', 'bitch', 'asshole',
   'bastard', 'jerk', 'loser', 'freak', 'weirdo', 'creep',
   'shut up', 'go away', 'get lost', 'you suck', 'hate you',
@@ -31,6 +32,7 @@ function checkForBadWords(text) {
     }
 
     const normalizedText = text.toLowerCase().trim();
+    const normalizedAlpha = normalizedText.replace(/[^a-z0-9\u0600-\u06FF]+/g, ' ');
     const foundWords = [];
     let cleanText = text;
 
@@ -51,7 +53,8 @@ function checkForBadWords(text) {
           wordRegex = new RegExp(`\\b${escapeRegExp(normalizedBadWord)}\\b`, 'gi');
         }
         
-        if (wordRegex.test(normalizedText)) {
+        const wordRegexAlt = new RegExp(wordRegex.source, 'gi');
+        if (wordRegex.test(normalizedText) || wordRegexAlt.test(normalizedAlpha)) {
           foundWords.push(badWord);
           // استبدال الكلمة السيئة بنجوم
           cleanText = cleanText.replace(wordRegex, '*'.repeat(badWord.length));

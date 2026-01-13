@@ -641,6 +641,15 @@ class _ChatScreenState extends State<ChatScreen> {
         shadowColor: Color(0xFF00ACC1).withOpacity(0.5),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.dashboard_outlined, color: Colors.white),
+            onPressed: () {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            },
+            tooltip: 'Back to dashboard',
+          ),
           // Language toggle button
           Container(
             margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),

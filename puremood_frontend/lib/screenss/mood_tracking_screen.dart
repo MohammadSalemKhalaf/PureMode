@@ -309,75 +309,8 @@ class _MoodTrackingScreenState extends State<MoodTrackingScreen>
 
   // 📝 سؤال انعكاس/امتنان بسيط حسب المزاج
   Future<void> _maybeAskReflection(String moodEmoji) async {
-    const sadEmojis = ['😢', '😔'];
-    const happyEmojis = ['😊', '😄'];
+    return;
 
-    if (!sadEmojis.contains(moodEmoji) && !happyEmojis.contains(moodEmoji)) {
-      return;
-    }
-
-    final bool isSad = sadEmojis.contains(moodEmoji);
-    final String title = isSad ? 'Take a moment' : 'Gratitude moment';
-    final String question = isSad
-        ? 'What is one thing that made today hard for you?'
-        : 'What is one thing you feel grateful for today?';
-    final String hint = isSad
-        ? 'Write a short reflection (optional)...'
-        : 'Write something you are thankful for (optional)...';
-
-    final TextEditingController reflectionController = TextEditingController();
-
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                question,
-                style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: reflectionController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: hint,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Skip', style: GoogleFonts.poppins()),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final text = reflectionController.text.trim();
-                if (text.isNotEmpty) {
-                  // ندمج الانعكاس/الامتنان في الملاحظة الحالية بشكل منظم
-                  final existing = noteController.text.trim();
-                  final tag = isSad ? '[Reflection]' : '[Gratitude]';
-                  final block = '\n\n$tag $text';
-                  noteController.text = existing.isEmpty
-                      ? block.trim()
-                      : existing + block;
-                }
-                Navigator.of(context).pop();
-              },
-              child: Text('Save', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   void saveMood() async {
