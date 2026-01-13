@@ -1,11 +1,12 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:puremood_frontend/utils/io_utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:puremood_frontend/config/api_config.dart';
 
 class MoodService {
   final storage = FlutterSecureStorage();
-  final String baseUrl = 'http://10.0.2.2:5000/api/moods';
+  final String baseUrl = '${ApiConfig.baseUrl}/moods';
 
   // 🟢 Add new mood - Enhanced version
   Future<Map<String, dynamic>> addMoodEntry(
@@ -269,7 +270,7 @@ class MoodService {
   // 🔍 Check server connection
   Future<bool> checkServerConnection() async {
     try {
-      final response = await http.get(Uri.parse('http://10.0.2.2:5000/'));
+      final response = await http.get(Uri.parse('${ApiConfig.baseHost}/'));
       return response.statusCode == 200;
     } catch (e) {
       print('❌ Cannot connect to server: $e');
@@ -277,3 +278,5 @@ class MoodService {
     }
   }
 }
+
+

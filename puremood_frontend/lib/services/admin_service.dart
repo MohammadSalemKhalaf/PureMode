@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:puremood_frontend/config/api_config.dart';
 
 class AdminService {
-  final String baseUrl = 'http://10.0.2.2:5000/api/admin';
+  final String baseUrl = '${ApiConfig.baseUrl}/admin';
   final storage = const FlutterSecureStorage();
 
   Future<String?> _getToken() async {
@@ -127,7 +128,7 @@ class AdminService {
   Future<List<dynamic>> getNotifications({int? limit}) async {
     try {
       final token = await _getToken();
-      String url = 'http://10.0.2.2:5000/api/notifications';
+      String url = '${ApiConfig.baseUrl}/notifications';
       if (limit != null) url += '?limit=$limit';
       final response = await http.get(
         Uri.parse(url),
@@ -148,7 +149,7 @@ class AdminService {
     try {
       final token = await _getToken();
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:5000/api/notifications/stats'),
+        Uri.parse('${ApiConfig.baseUrl}/notifications/stats'),
         headers: _getHeaders(token),
       );
       if (response.statusCode == 200) return jsonDecode(response.body);
@@ -162,7 +163,7 @@ class AdminService {
     try {
       final token = await _getToken();
       await http.put(
-        Uri.parse('http://10.0.2.2:5000/api/notifications/read-all'),
+        Uri.parse('${ApiConfig.baseUrl}/notifications/read-all'),
         headers: _getHeaders(token),
       );
     } catch (e) {
@@ -174,7 +175,7 @@ class AdminService {
     try {
       final token = await _getToken();
       await http.put(
-        Uri.parse('http://10.0.2.2:5000/api/notifications/$notificationId/read'),
+        Uri.parse('${ApiConfig.baseUrl}/notifications/$notificationId/read'),
         headers: _getHeaders(token),
       );
     } catch (e) {
@@ -384,3 +385,5 @@ class AdminService {
     }
   }
 }
+
+

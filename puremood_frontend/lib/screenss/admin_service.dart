@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:puremood_frontend/config/api_config.dart';
 
 class AdminService {
   // Use 10.0.2.2 for Android Emulator, localhost for web/desktop
-  final String baseUrl = 'http://10.0.2.2:5000/api/admin';
+  final String baseUrl = '${ApiConfig.baseUrl}/admin';
   final storage = FlutterSecureStorage();
 
   Future<String?> getToken() async {
@@ -206,7 +207,7 @@ class AdminService {
     try {
       final token = await getToken();
       final res = await http.get(
-        Uri.parse('http://10.0.2.2:5000/api/community/posts/$postId/comments'),
+        Uri.parse('${ApiConfig.baseUrl}/community/posts/$postId/comments'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -228,7 +229,7 @@ class AdminService {
     try {
       final token = await getToken();
       final res = await http.delete(
-        Uri.parse('http://10.0.2.2:5000/api/community/comments/$commentId'),
+        Uri.parse('${ApiConfig.baseUrl}/community/comments/$commentId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -261,10 +262,10 @@ class AdminService {
     try {
       final token = await getToken();
       print('🔑 Token: ${token?.substring(0, 20)}...');
-      print('📡 Calling: http://10.0.2.2:5000/api/notifications/stats');
+      print('📡 Calling: ${ApiConfig.baseUrl}/notifications/stats');
       
       final res = await http.get(
-        Uri.parse('http://10.0.2.2:5000/api/notifications/stats'),
+        Uri.parse('${ApiConfig.baseUrl}/notifications/stats'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -290,7 +291,7 @@ class AdminService {
     try {
       final token = await getToken();
       final res = await http.get(
-        Uri.parse('http://10.0.2.2:5000/api/notifications?limit=$limit'),
+        Uri.parse('${ApiConfig.baseUrl}/notifications?limit=$limit'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -312,7 +313,7 @@ class AdminService {
     try {
       final token = await getToken();
       await http.put(
-        Uri.parse('http://10.0.2.2:5000/api/notifications/$notificationId/read'),
+        Uri.parse('${ApiConfig.baseUrl}/notifications/$notificationId/read'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -328,7 +329,7 @@ class AdminService {
     try {
       final token = await getToken();
       await http.put(
-        Uri.parse('http://10.0.2.2:5000/api/notifications/read-all'),
+        Uri.parse('${ApiConfig.baseUrl}/notifications/read-all'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -339,3 +340,5 @@ class AdminService {
     }
   }
 }
+
+

@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/assessment_models.dart';
+import 'package:puremood_frontend/config/api_config.dart';
 
 class AssessmentService {
-  final String baseUrl = 'http://10.0.2.2:5000/api';
+  final String baseUrl = '${ApiConfig.baseUrl}';
   final FlutterSecureStorage storage = const FlutterSecureStorage();
 
   Future<String?> _getToken() async {
@@ -262,3 +263,5 @@ class AssessmentService {
     }
   }
 }
+
+

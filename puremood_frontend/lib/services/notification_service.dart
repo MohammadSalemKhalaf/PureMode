@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:puremood_frontend/utils/web_notification.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -18,6 +20,10 @@ void setNotificationTapHandler(NotificationTapHandler handler) {
 
 // Initialize notifications
 Future<void> initializeNotifications() async {
+  if (kIsWeb) {
+    await requestWebNotificationPermission();
+    return;
+  }
   tz.initializeTimeZones();
 
   const AndroidInitializationSettings initializationSettingsAndroid =
@@ -221,12 +227,36 @@ String _formatTimeArabic(DateTime dt) {
   return '$arabicDate $arabicTime';
 }
 
+({String title, String body}) _resolveNotificationText(RemoteMessage message) {
+  final type = message.data['type']?.toString();
+  final role = message.data['sender_role']?.toString();
+  final defaultTitle = type == 'chat_message'
+      ? (role == 'patient'
+          ? 'New message from your patient'
+          : 'New message from your specialist')
+      : 'PureMood';
+  final title = message.notification?.title ??
+      message.data['title']?.toString() ??
+      defaultTitle;
+  final body = message.notification?.body ??
+      message.data['body']?.toString() ??
+      message.data['message']?.toString() ??
+      'Open to view';
+  return (title: title, body: body);
+}
+
 Future<void> showFirebaseNotification(RemoteMessage message) async {
+  final text = _resolveNotificationText(message);
+  if (kIsWeb) {
+    print('Web notification: title="${text.title}", body="${text.body}"');
+    await showWebNotification(title: text.title, body: text.body);
+    return;
+  }
   final type = message.data['type'];
   final channelId = type == 'chat_message' ? 'chat_channel_v2' : 'firebase_channel';
   final isChat = channelId == 'chat_channel_v2';
-  final title = message.notification?.title ?? 'New message';
-  final body = message.notification?.body ?? 'Open to view';
+  final title = text.title;
+  final body = text.body;
   final androidDetails = AndroidNotificationDetails(
     channelId,
     isChat ? 'Chat Messages' : 'Firebase Notifications',
@@ -259,6 +289,10 @@ Future<void> showSimpleNotification({
   required String body,
   int id = 0,
 }) async {
+  if (kIsWeb) {
+    await showWebNotification(title: title, body: body);
+    return;
+  }
   final androidDetails = AndroidNotificationDetails(
     'default_channel',
     'General Notifications',
@@ -281,6 +315,10 @@ Future<void> showPersistentShadeNotification({
   required String title,
   required String body,
 }) async {
+  if (kIsWeb) {
+    await showWebNotification(title: title, body: body);
+    return;
+  }
   try {
     final androidDetails = AndroidNotificationDetails(
       'persistent_shade_channel',

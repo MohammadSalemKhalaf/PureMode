@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:puremood_frontend/config/api_config.dart';
 
 // استثناء خاص بمراقبة المحتوى
 class CommentModerationException implements Exception {
@@ -21,7 +22,7 @@ class CommentModerationException implements Exception {
 }
 
 class CommunityService {
-  final String baseUrl = 'http://10.0.2.2:5000/api/community';
+  final String baseUrl = '${ApiConfig.baseUrl}/community';
   final storage = const FlutterSecureStorage();
 
   Future<String?> getToken() async {
@@ -355,3 +356,5 @@ class CommunityService {
     }
   }
 }
+
+

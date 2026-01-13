@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'package:puremood_frontend/utils/io_utils.dart';
 import 'package:puremood_frontend/services/api_service.dart';
 import 'package:puremood_frontend/services/email_verification_service.dart';
 import 'package:puremood_frontend/screenss/email_verification_screen.dart';
@@ -47,17 +47,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     // إذا specialist، التحقق من الشهادة
-    if (selectedRole == 'specialist' && _specialistCertificateFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Please upload your certificate before completing registration.',
-            style: GoogleFonts.poppins(),
+    if (selectedRole == 'specialist') {
+      if (specializationController.text.trim().isEmpty ||
+          licenseController.text.trim().isEmpty ||
+          experienceController.text.trim().isEmpty ||
+          educationController.text.trim().isEmpty ||
+          sessionPriceController.text.trim().isEmpty ||
+          bioController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Please complete all specialist information fields.',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.red,
           ),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
+        );
+        return;
+      }
+
+      if (_specialistCertificateFile == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Please upload your certificate before completing registration.',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
     }
 
     setState(() => loading = true);

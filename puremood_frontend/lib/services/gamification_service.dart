@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:puremood_frontend/config/api_config.dart';
 
 class GamificationService {
-  static const String _baseUrl = 'http://10.0.2.2:5000/api/gamification';
+  static String get _baseUrl => '${ApiConfig.baseUrl}/gamification';
   final FlutterSecureStorage _storage = FlutterSecureStorage();
 
   // 🔹 Function to get headers with token
@@ -623,3 +624,5 @@ class GamificationService {
     }
   }
 }
+
+

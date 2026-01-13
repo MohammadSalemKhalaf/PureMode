@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'package:puremood_frontend/utils/io_utils.dart';
+import 'package:puremood_frontend/utils/image_provider_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -131,8 +132,8 @@ class _WarmDrinksScreenState extends State<WarmDrinksScreen> {
             if (capturedImage != null)
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.file(
-                  capturedImage!,
+                child: Image(
+                  image: buildLocalImageProvider(capturedImage!.path),
                   height: 200,
                   width: double.infinity,
                   fit: BoxFit.cover,

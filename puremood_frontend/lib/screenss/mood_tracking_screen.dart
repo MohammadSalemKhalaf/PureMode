@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'package:puremood_frontend/utils/io_utils.dart';
+import 'package:puremood_frontend/utils/image_provider_utils.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -1081,9 +1082,9 @@ class _MoodTrackingScreenState extends State<MoodTrackingScreen>
                         ],
                         image: selectedImage != null
                             ? DecorationImage(
-                          image: FileImage(selectedImage!),
-                          fit: BoxFit.cover,
-                        )
+                                image: buildLocalImageProvider(selectedImage!.path),
+                                fit: BoxFit.cover,
+                              )
                             : null,
                       ),
                       child: selectedImage == null
@@ -1127,7 +1128,10 @@ class _MoodTrackingScreenState extends State<MoodTrackingScreen>
                           Positioned.fill(
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(22),
-                              child: Image.file(selectedImage!, fit: BoxFit.cover),
+                              child: Image(
+                                image: buildLocalImageProvider(selectedImage!.path),
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                           Align(

@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'package:puremood_frontend/utils/io_utils.dart';
+import 'package:puremood_frontend/utils/image_provider_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/image_source_service.dart';
@@ -114,8 +115,8 @@ class _ImageCompleteExampleScreenState extends State<ImageCompleteExampleScreen>
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    _selectedImage!,
+                  child: Image(
+                    image: buildLocalImageProvider(_selectedImage!.path),
                     height: 250,
                     width: double.infinity,
                     fit: BoxFit.cover,

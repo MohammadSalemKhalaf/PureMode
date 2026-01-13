@@ -3,9 +3,10 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/specialist.dart';
 import '../models/appointment.dart';
+import 'package:puremood_frontend/config/api_config.dart';
 
 class SpecialistService {
-  final String baseUrl = 'http://10.0.2.2:5000/api/specialists';
+  final String baseUrl = '${ApiConfig.baseUrl}/specialists';
   final storage = const FlutterSecureStorage();
 
   Future<String?> _getToken() async {
@@ -319,3 +320,5 @@ class SpecialistService {
     }
   }
 }
+
+

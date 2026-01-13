@@ -71,7 +71,9 @@ void main() async {
 
   // Print FCM token (useful for testing)
   final messaging = FirebaseMessaging.instance;
-  final token = await messaging.getToken();
+  final token = kIsWeb
+      ? await messaging.getToken(vapidKey: FirebaseTokenService.webVapidKeyValue)
+      : await messaging.getToken();
   print("Device Token: $token");
 
   // Initialize Firebase for user (register FCM token with backend)

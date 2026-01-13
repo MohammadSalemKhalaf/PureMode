@@ -1,15 +1,23 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:puremood_frontend/utils/io_utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../screenss/patient_specialist_chat_screen.dart';
 import 'navigation_service.dart';
+import 'package:puremood_frontend/config/api_config.dart';
 
 class FirebaseTokenService {
-  static const String _baseUrl = 'http://10.0.2.2:5000/api'; // Android Emulator
+  static const String webVapidKey = String.fromEnvironment(
+    'WEB_VAPID_KEY',
+    defaultValue:
+        'BlrypomCZfclj3QyMJrrFbfFuMCKiKmeSyme585jCm0ZyyHnPLFTkA7pJ9-Sy6xAI297iPo8FZLArnn7aMFZv4',
+  );
+  static String get webVapidKeyValue => webVapidKey.trim();
+  static String get _baseUrl => ApiConfig.baseUrl;
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   // تسجيل FCM token مع الخادم
@@ -20,7 +28,9 @@ class FirebaseTokenService {
 
       // الحصول على FCM token
       final messaging = FirebaseMessaging.instance;
-      final fcmToken = await messaging.getToken();
+      final fcmToken = kIsWeb
+          ? await messaging.getToken(vapidKey: webVapidKeyValue)
+          : await messaging.getToken();
       
       if (fcmToken == null || fcmToken.isEmpty) {
         print('❌ No FCM token available');
@@ -40,6 +50,15 @@ class FirebaseTokenService {
       }
 
       // إرسال FCM token للخادم
+      final deviceType = kIsWeb
+          ? 'web'
+          : (Platform.isAndroid ? 'android' : 'ios');
+      final deviceInfo = kIsWeb
+          ? 'Web'
+          : (Platform.isAndroid
+              ? 'Android ${Platform.operatingSystemVersion}'
+              : 'iOS ${Platform.operatingSystemVersion}');
+
       final response = await http.post(
         Uri.parse('$_baseUrl/fcm-tokens'),
         headers: {
@@ -48,10 +67,8 @@ class FirebaseTokenService {
         },
         body: json.encode({
           'fcm_token': fcmToken,
-          'device_type': Platform.isAndroid ? 'android' : 'ios',
-          'device_info': Platform.isAndroid 
-              ? 'Android ${Platform.operatingSystemVersion}' 
-              : 'iOS ${Platform.operatingSystemVersion}',
+          'device_type': deviceType,
+          'device_info': deviceInfo,
         }),
       );
 
@@ -438,3 +455,5 @@ class FirebaseTokenService {
     print('📊 Data: ${message.data}');
   }
 }
+
+

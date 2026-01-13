@@ -3,10 +3,11 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/chat_session.dart';
 import '../models/chat_message.dart';
+import 'package:puremood_frontend/config/api_config.dart';
 
 class AIChatService {
   // Use localhost for Chrome
-  final String baseUrl = 'http://10.0.2.2:5000/api/ai';
+  final String baseUrl = '${ApiConfig.baseUrl}/ai';
   final storage = const FlutterSecureStorage();
 
   Future<String?> _getToken() async {
@@ -146,3 +147,5 @@ class AIChatService {
     }
   }
 }
+
+

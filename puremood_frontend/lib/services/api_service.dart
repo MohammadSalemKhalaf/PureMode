@@ -1,10 +1,11 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:puremood_frontend/utils/io_utils.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:puremood_frontend/config/api_config.dart';
 
 class ApiService {
-  final String baseUrl = 'http://10.0.2.2:5000/api/users';
+  final String baseUrl = '${ApiConfig.baseUrl}/users';
   final storage = FlutterSecureStorage();
   Future<String?> getToken() async {
     return await storage.read(key: 'jwt'); // ✅ Use 'jwt' instead of 'token'
@@ -36,7 +37,7 @@ class ApiService {
       if (token == null) return null;
 
       final res = await http.get(
-        Uri.parse('http://10.0.2.2:5000/api/users/$userId'),
+        Uri.parse('${ApiConfig.baseUrl}/users/$userId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -139,7 +140,7 @@ class ApiService {
   // -------------------------
   Future<Map<String, dynamic>> forgotPassword(String email) async {
     final res = await http.post(
-      Uri.parse('http://10.0.2.2:5000/api/email/send-reset-code'),
+      Uri.parse('${ApiConfig.baseUrl}/email/send-reset-code'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email}),
     );
@@ -152,7 +153,7 @@ class ApiService {
     required String newPassword,
   }) async {
     final res = await http.post(
-      Uri.parse('http://10.0.2.2:5000/api/email/reset-password'),
+      Uri.parse('${ApiConfig.baseUrl}/email/reset-password'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'email': email,
@@ -198,7 +199,7 @@ class ApiService {
 
       // Fetch latest mood from backend
       final moodRes = await http.get(
-        Uri.parse('http://10.0.2.2:5000/api/moods/user/me'),
+        Uri.parse('${ApiConfig.baseUrl}/moods/user/me'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -207,7 +208,7 @@ class ApiService {
 
       // Fetch weekly analytics
       final analyticsRes = await http.get(
-        Uri.parse('http://10.0.2.2:5000/api/analytics/weekly'),
+        Uri.parse('${ApiConfig.baseUrl}/analytics/weekly'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -299,7 +300,7 @@ class ApiService {
       if (token == null) return [];
 
       final res = await http.get(
-        Uri.parse('http://10.0.2.2:5000/api/moods/user/me'),
+        Uri.parse('${ApiConfig.baseUrl}/moods/user/me'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -456,7 +457,7 @@ class ApiService {
       }
 
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:5000/api/user-notifications/app-startup-reminder'),
+        Uri.parse('${ApiConfig.baseUrl}/user-notifications/app-startup-reminder'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -476,3 +477,5 @@ class ApiService {
     }
   }
 }
+
+

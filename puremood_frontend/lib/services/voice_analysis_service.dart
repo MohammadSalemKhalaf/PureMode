@@ -1,7 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:puremood_frontend/utils/io_utils.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../config/api_config.dart';
@@ -24,6 +25,10 @@ class VoiceAnalysisService {
   String get _baseUrl => '${ApiConfig.baseUrl}/ai/voice-analysis';
 
   Future<VoiceAnalysisResult> analyzeVoice(File audioFile) async {
+    if (kIsWeb) {
+      throw Exception('Voice analysis is not supported on web.');
+    }
+
     final token = await _storage.read(key: 'jwt');
     if (token == null) {
       throw Exception('User not authenticated');

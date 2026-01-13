@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'notification_dropdown.dart';
+import 'package:puremood_frontend/config/api_config.dart';
 
 // 📱 مثال على استخدام NotificationDropdown
 
 class AdminDashboard extends StatelessWidget {
-  final String baseUrl = 'http://10.0.2.2:5000'; // غير هذا للـ server الخاص بك
+  final String baseUrl = '${ApiConfig.baseHost}'; // غير هذا للـ server الخاص بك
   final String adminToken =
       'YOUR_ADMIN_TOKEN_HERE'; // احصل عليه من تسجيل الدخول
 
@@ -277,3 +278,5 @@ class SimpleAppBarExample extends StatelessWidget {
     );
   }
 }
+
+

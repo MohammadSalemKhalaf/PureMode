@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'package:puremood_frontend/utils/io_utils.dart';
+import 'package:puremood_frontend/utils/image_provider_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -110,8 +111,8 @@ class _ImageStorageExampleScreenState extends State<ImageStorageExampleScreen> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    _selectedImage!,
+                  child: Image(
+                    image: buildLocalImageProvider(_selectedImage!.path),
                     height: 200,
                     width: double.infinity,
                     fit: BoxFit.cover,
@@ -388,8 +389,8 @@ class _ImageStorageExampleScreenState extends State<ImageStorageExampleScreen> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.file(
-                        _savedImages[index],
+                      child: Image(
+                        image: buildLocalImageProvider(_savedImages[index].path),
                         fit: BoxFit.cover,
                         width: double.infinity,
                         height: double.infinity,

@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/mood_models.dart';
+import 'package:puremood_frontend/config/api_config.dart';
 
 class RecommendationService {
   final storage = FlutterSecureStorage();
-  final String baseUrl = 'http://10.0.2.2:5000/api/recommendations';
+  final String baseUrl = '${ApiConfig.baseUrl}/recommendations';
 
   // 🟢 Get user's recommendations
   Future<List<Recommendation>> getMyRecommendations({
@@ -332,3 +333,5 @@ class RecommendationService {
     }
   }
 }
+
+

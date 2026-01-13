@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:puremood_frontend/config/api_config.dart';
 
 class EmailVerificationService {
-  final String baseUrl = 'http://10.0.2.2:5000/api/email';
+  final String baseUrl = '${ApiConfig.baseUrl}/email';
 
   // Send verification code to email
   Future<Map<String, dynamic>> sendVerificationCode(String email) async {
@@ -58,3 +59,5 @@ class EmailVerificationService {
     }
   }
 }
+
+

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'package:puremood_frontend/utils/io_utils.dart';
+import 'package:puremood_frontend/utils/image_provider_utils.dart';
 import '../models/specialist.dart';
 import '../services/specialist_service.dart';
 import '../config/api_config.dart';
@@ -510,8 +511,8 @@ class _SpecialistOwnProfileScreenState extends State<SpecialistOwnProfileScreen>
                   child: CircleAvatar(
                     radius: 60,
                     backgroundColor: Colors.white,
-                    backgroundImage: !kIsWeb && _profileImageFile != null
-                        ? FileImage(_profileImageFile!)
+                    backgroundImage: _profileImageFile != null
+                        ? buildLocalImageProvider(_profileImageFile!.path)
                         : _specialist?.profileImage != null
                             ? NetworkImage(
                                 _specialist!.profileImage!.startsWith('http')
@@ -923,20 +924,12 @@ class _SpecialistOwnProfileScreenState extends State<SpecialistOwnProfileScreen>
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: kIsWeb
-                          ? Container(
-                              color: Colors.grey[300],
-                              child: Icon(
-                                Icons.image,
-                                color: Colors.grey[600],
-                              ),
-                            )
-                          : Image.file(
-                              _portfolioImages[index],
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                            ),
+                      child: Image(
+                        image: buildLocalImageProvider(_portfolioImages[index].path),
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      ),
                     ),
                     Positioned(
                       top: 4,
