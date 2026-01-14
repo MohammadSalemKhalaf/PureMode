@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'dart:async';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/booking_chat_service.dart';
@@ -200,7 +201,7 @@ class _PatientSpecialistChatScreenState extends State<PatientSpecialistChatScree
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: const Color(0xFFF4FAF8),
       appBar: AppBar(
         backgroundColor: const Color(0xFF008080),

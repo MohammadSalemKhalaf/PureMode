@@ -10,7 +10,6 @@ import 'package:puremood_frontend/providers/theme_provider.dart';
 import 'screenss/login_screen.dart';
 import 'screenss/onboarding_screen.dart';
 import 'screenss/admin_dashboard_screen.dart';
-import 'screenss/admin_pending_users_screen.dart';
 import 'screenss/admin_users_screen.dart';
 import 'screenss/admin_posts_screen.dart';
 import 'screenss/admin_health_screen.dart';
@@ -122,7 +121,6 @@ class PureMoodApp extends StatelessWidget {
                 : OnboardingScreen(),
             routes: {
               '/admin/dashboard': (context) => AdminDashboardScreen(),
-              '/admin/pending': (context) => AdminPendingUsersScreen(),
               '/admin/users': (context) => AdminUsersScreen(),
               '/admin/posts': (context) => AdminPostsScreen(),
               '/admin/health': (context) => AdminHealthScreen(),

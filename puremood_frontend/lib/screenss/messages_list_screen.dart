@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/booking.dart';
 import '../services/api_service.dart';
@@ -147,7 +148,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: const Color(0xFFF4FAF8),
       appBar: AppBar(
         title: Text(

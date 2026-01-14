@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
@@ -66,7 +67,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
     // إذا darkMode لم يتم تحميله بعد، عرض loading
     if (darkMode == null) {
-      return Scaffold(
+      return WebScaffold(
         backgroundColor: isDark ? Color(0xFF0A0F1C) : Color(0xFFF8FAFF),
         appBar: AppBar(
           title: Text(
@@ -95,7 +96,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       );
     }
 
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: isDark ? Color(0xFF0A0F1C) : Color(0xFFF8FAFF),
       appBar: AppBar(
         title: Text(

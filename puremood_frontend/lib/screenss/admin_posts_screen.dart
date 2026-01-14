@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:puremood_frontend/services/admin_service.dart';
 
@@ -514,7 +515,7 @@ class _AdminPostsScreenState extends State<AdminPostsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
 
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: isDark ? Color(0xFF0A0F1C) : Color(0xFFF8FAFF),
       appBar: AppBar(
         title: Text(

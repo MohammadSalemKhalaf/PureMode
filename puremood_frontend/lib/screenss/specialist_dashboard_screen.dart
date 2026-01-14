@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/booking.dart';
 import '../services/booking_service.dart';
@@ -168,7 +169,7 @@ class _SpecialistDashboardScreenState extends State<SpecialistDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: Colors.grey[100],
       drawer: _buildDrawer(),
       appBar: AppBar(

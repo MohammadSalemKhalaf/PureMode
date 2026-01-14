@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/admin_service.dart';
 
@@ -9,19 +10,16 @@ class AdminPanelScreen extends StatefulWidget {
   _AdminPanelScreenState createState() => _AdminPanelScreenState();
 }
 
-class _AdminPanelScreenState extends State<AdminPanelScreen> with SingleTickerProviderStateMixin {
+class _AdminPanelScreenState extends State<AdminPanelScreen> {
   final AdminService _adminService = AdminService();
-  late TabController _tabController;
   
   Map<String, dynamic>? stats;
-  List<dynamic> pendingSpecialists = [];
   List<dynamic> allSpecialists = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _loadData();
   }
 
@@ -29,12 +27,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> with SingleTickerPr
     setState(() => isLoading = true);
     try {
       final statsData = await _adminService.getDashboardStats();
-      final pending = await _adminService.getPendingSpecialists();
       final all = await _adminService.getAllSpecialists();
       
       setState(() {
         stats = statsData;
-        pendingSpecialists = pending;
         allSpecialists = all;
         isLoading = false;
       });
@@ -83,7 +79,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: Text(
@@ -92,32 +88,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> with SingleTickerPr
         ),
         backgroundColor: const Color(0xFF008080),
         elevation: 0,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          tabs: [
-            Tab(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.pending_actions),
-                  SizedBox(width: 8),
-                  Text('Pending', style: GoogleFonts.poppins()),
-                ],
-              ),
-            ),
-            Tab(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.check_circle),
-                  SizedBox(width: 8),
-                  Text('All', style: GoogleFonts.poppins()),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
@@ -125,13 +95,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> with SingleTickerPr
               children: [
                 _buildStatsCard(),
                 Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildPendingList(),
-                      _buildAllSpecialistsList(),
-                    ],
-                  ),
+                  child: _buildAllSpecialistsList(),
                 ),
               ],
             ),
@@ -162,7 +126,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> with SingleTickerPr
         children: [
           _buildStatItem('Total Users', stats!['totalUsers'].toString(), Icons.people),
           _buildStatItem('Specialists', stats!['totalSpecialists'].toString(), Icons.medical_services),
-          _buildStatItem('Pending', stats!['pendingSpecialists'].toString(), Icons.hourglass_empty),
         ],
       ),
     );
@@ -192,33 +155,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> with SingleTickerPr
     );
   }
 
-  Widget _buildPendingList() {
-    if (pendingSpecialists.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.check_circle_outline, size: 80, color: Colors.green),
-            SizedBox(height: 16),
-            Text(
-              'No Pending Specialists',
-              style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: EdgeInsets.all(16),
-      itemCount: pendingSpecialists.length,
-      itemBuilder: (context, index) {
-        final specialist = pendingSpecialists[index];
-        return _buildSpecialistCard(specialist, isPending: true);
-      },
-    );
-  }
-
   Widget _buildAllSpecialistsList() {
     if (allSpecialists.isEmpty) {
       return Center(child: Text('No specialists found'));
@@ -229,12 +165,12 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> with SingleTickerPr
       itemCount: allSpecialists.length,
       itemBuilder: (context, index) {
         final specialist = allSpecialists[index];
-        return _buildSpecialistCard(specialist, isPending: false);
+        return _buildSpecialistCard(specialist);
       },
     );
   }
 
-  Widget _buildSpecialistCard(dynamic specialist, {required bool isPending}) {
+  Widget _buildSpecialistCard(dynamic specialist) {
     final isVerified = specialist['is_verified'] == 1;
     
     return Card(
@@ -297,36 +233,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> with SingleTickerPr
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-              ),
-            ],
-            if (isPending) ...[
-              SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _approveSpecialist(specialist['specialist_id']),
-                      icon: Icon(Icons.check),
-                      label: Text('Approve', style: GoogleFonts.poppins()),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _rejectSpecialist(specialist['specialist_id']),
-                      icon: Icon(Icons.close, color: Colors.red),
-                      label: Text('Reject', style: GoogleFonts.poppins(color: Colors.red)),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.red),
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ],
           ],

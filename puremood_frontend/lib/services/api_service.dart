@@ -1,7 +1,11 @@
 import 'dart:convert';
 import 'package:puremood_frontend/utils/io_utils.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:puremood_frontend/config/api_config.dart';
 
 class ApiService {
@@ -88,7 +92,32 @@ class ApiService {
         request.fields['picture'] = picture;
       }
 
-      if (certificateFile is File) {
+      if (certificateFile is XFile) {
+        if (kIsWeb) {
+          final bytes = await certificateFile.readAsBytes();
+          final mimeType = lookupMimeType(
+            certificateFile.name,
+            headerBytes: bytes,
+          );
+          request.files.add(
+            http.MultipartFile.fromBytes(
+              'certificate_file',
+              bytes,
+              filename: certificateFile.name,
+              contentType: mimeType != null
+                  ? MediaType.parse(mimeType)
+                  : MediaType('application', 'octet-stream'),
+            ),
+          );
+        } else {
+          request.files.add(
+            await http.MultipartFile.fromPath(
+              'certificate_file',
+              certificateFile.path,
+            ),
+          );
+        }
+      } else if (certificateFile is File) {
         request.files.add(
           await http.MultipartFile.fromPath(
             'certificate_file',
@@ -439,7 +468,54 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
-      throw Exception('Failed to upload profile picture: ${response.statusCode}');
+      throw Exception(
+        'Failed to upload profile picture: ${response.statusCode} ${response.body}',
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>> uploadProfilePictureXFile(XFile imageFile) async {
+    final token = await storage.read(key: 'jwt');
+    if (token == null) {
+      throw Exception('Unauthorized: No token found');
+    }
+
+    final uri = Uri.parse('$baseUrl/me/picture');
+    final request = http.MultipartRequest(kIsWeb ? 'POST' : 'PUT', uri);
+    request.headers['Authorization'] = 'Bearer $token';
+
+    if (kIsWeb) {
+      final bytes = await imageFile.readAsBytes();
+      final mimeType = lookupMimeType(
+        imageFile.name,
+        headerBytes: bytes,
+      );
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'picture',
+          bytes,
+          filename: imageFile.name,
+          contentType: mimeType != null
+              ? MediaType.parse(mimeType)
+              : MediaType('application', 'octet-stream'),
+        ),
+      );
+    } else {
+      request.files.add(await http.MultipartFile.fromPath(
+        'picture',
+        imageFile.path,
+      ));
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception(
+        'Failed to upload profile picture: ${response.statusCode} ${response.body}',
+      );
     }
   }
 

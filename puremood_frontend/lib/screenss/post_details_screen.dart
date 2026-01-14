@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:puremood_frontend/services/community_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -112,7 +113,7 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: const Color(0xFFEFF5F5),
       appBar: AppBar(
         title: Text('Post Details', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),

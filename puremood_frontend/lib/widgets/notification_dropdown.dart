@@ -339,7 +339,7 @@ class _NotificationMenuContentState extends State<NotificationMenuContent> {
   void _handleNotificationTap(NotificationModel notification) {
     switch (notification.type) {
       case 'new_user_pending':
-        Navigator.pushNamed(widget.parentContext, '/admin/pending');
+        Navigator.pushNamed(widget.parentContext, '/admin/users');
         break;
       case 'new_post':
         final postId = notification.data?['post_id'];

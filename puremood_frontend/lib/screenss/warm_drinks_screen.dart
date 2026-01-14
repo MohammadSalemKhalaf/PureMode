@@ -1,4 +1,5 @@
 import 'package:puremood_frontend/utils/io_utils.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:puremood_frontend/utils/image_provider_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -223,7 +224,7 @@ class _WarmDrinksScreenState extends State<WarmDrinksScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: Color(0xFFFFF3E0),
       appBar: AppBar(
         backgroundColor: Color(0xFFFF9800),

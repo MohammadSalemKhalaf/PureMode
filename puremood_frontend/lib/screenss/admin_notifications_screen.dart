@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import '../services/admin_service.dart';
 
 class AdminNotificationsScreen extends StatefulWidget {
@@ -73,7 +74,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: const Color(0xFFF8FAFF),
       appBar: AppBar(
         title: Text(

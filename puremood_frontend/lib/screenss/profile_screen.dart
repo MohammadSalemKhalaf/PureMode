@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -35,15 +37,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (pickedFile == null) return;
 
-      final file = File(pickedFile.path);
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Uploading profile picture...'),
         ),
       );
 
-      await api.uploadProfilePicture(file);
+      if (kIsWeb) {
+        await api.uploadProfilePictureXFile(pickedFile);
+      } else {
+        final file = File(pickedFile.path);
+        await api.uploadProfilePicture(file);
+      }
 
       await loadUserData();
 
@@ -81,7 +86,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: const Color(0xFFEFF5F5),
       appBar: AppBar(
         title: Text('Profile', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.white)),

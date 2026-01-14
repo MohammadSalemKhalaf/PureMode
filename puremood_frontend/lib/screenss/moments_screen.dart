@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:puremood_frontend/services/api_service.dart';
 
@@ -103,7 +104,7 @@ class _MomentsScreenState extends State<MomentsScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: const Color(0xFFE8F5F3),
       appBar: AppBar(
         backgroundColor: const Color(0xFF00897B),

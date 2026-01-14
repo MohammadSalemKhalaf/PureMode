@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
 import '../services/recommendation_service.dart';
@@ -202,7 +203,7 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: Color(0xFFF3E5F5),
       appBar: AppBar(
         backgroundColor: Color(0xFF9C27B0),

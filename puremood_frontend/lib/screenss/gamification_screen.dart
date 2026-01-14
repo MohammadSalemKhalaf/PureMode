@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/gamification_service.dart';
 
@@ -197,8 +199,9 @@ class _GamificationScreenState extends State<GamificationScreen>
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final isWeb = kIsWeb;
 
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: const Color(0xfff3f9f8),
       appBar: AppBar(
         title: Text('My Achievements 🏆', style: GoogleFonts.poppins(color: Colors.white, fontSize: 20)),
@@ -528,6 +531,7 @@ class _GamificationScreenState extends State<GamificationScreen>
   Widget _buildBadgesSection() {
     final badges = userStats?['userBadges'] ?? [];
     final screenHeight = MediaQuery.of(context).size.height;
+    final isWeb = kIsWeb;
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16),
@@ -577,13 +581,13 @@ class _GamificationScreenState extends State<GamificationScreen>
               )
             else
               Container(
-                height: screenHeight * 0.22,
+                height: isWeb ? 200 : screenHeight * 0.22,
                 child: GridView.builder(
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                      childAspectRatio: 0.9
+                      crossAxisCount: isWeb ? 4 : 3,
+                      mainAxisSpacing: isWeb ? 10 : 8,
+                      crossAxisSpacing: isWeb ? 10 : 8,
+                      childAspectRatio: isWeb ? 1.6 : 0.9
                   ),
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
@@ -615,8 +619,9 @@ class _GamificationScreenState extends State<GamificationScreen>
     final badgeName = badgeData['name']?.toString() ?? 'Badge';
     final badgeDesc = badgeData['description']?.toString() ?? '';
 
+    final isWeb = kIsWeb;
     return Container(
-        padding: EdgeInsets.all(6),
+        padding: EdgeInsets.all(isWeb ? 6 : 6),
         decoration: BoxDecoration(
             color: Colors.amber.shade50,
             borderRadius: BorderRadius.circular(12),
@@ -627,7 +632,7 @@ class _GamificationScreenState extends State<GamificationScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                  padding: EdgeInsets.all(6),
+                  padding: EdgeInsets.all(isWeb ? 6 : 6),
                   decoration: BoxDecoration(
                       color: Colors.amber.withOpacity(0.2),
                       shape: BoxShape.circle
@@ -635,15 +640,15 @@ class _GamificationScreenState extends State<GamificationScreen>
                   child: Icon(
                       Icons.workspace_premium_rounded,
                       color: Colors.amber.shade700,
-                      size: 18
+                      size: isWeb ? 18 : 18
                   )
               ),
-              SizedBox(height: 4),
+              SizedBox(height: isWeb ? 4 : 4),
               Text(
                   badgeName,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
-                      fontSize: 9,
+                      fontSize: isWeb ? 10 : 9,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF004D40)
                   ),
@@ -651,12 +656,12 @@ class _GamificationScreenState extends State<GamificationScreen>
                   overflow: TextOverflow.ellipsis
               ),
               if (badgeDesc.isNotEmpty) ...[
-                SizedBox(height: 2),
+                SizedBox(height: isWeb ? 2 : 2),
                 Text(
                     badgeDesc,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
-                        fontSize: 7,
+                        fontSize: isWeb ? 8 : 7,
                         color: Colors.grey.shade600
                     ),
                     maxLines: 2,

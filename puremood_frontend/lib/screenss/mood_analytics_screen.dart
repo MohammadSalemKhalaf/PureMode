@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../services/MoodAnalyticsService.dart';
@@ -1038,7 +1039,7 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: const Color(0xfff8fafc),
       appBar: AppBar(
         title: Text('Mood Analytics',

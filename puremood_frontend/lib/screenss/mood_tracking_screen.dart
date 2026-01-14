@@ -1,4 +1,5 @@
 import 'package:puremood_frontend/utils/io_utils.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:puremood_frontend/utils/image_provider_utils.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -591,7 +592,7 @@ class _MoodTrackingScreenState extends State<MoodTrackingScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: const Color(0xFFE8F5F3),
       appBar: AppBar(
         backgroundColor: const Color(0xFF00897B),

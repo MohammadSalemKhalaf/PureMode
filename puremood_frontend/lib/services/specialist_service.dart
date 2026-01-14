@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/specialist.dart';
@@ -317,6 +319,65 @@ class SpecialistService {
     } catch (e) {
       print('Error getting reviews: $e');
       return [];
+    }
+  }
+
+  Future<void> updateSpecialistProfile(
+    int specialistId,
+    Map<String, dynamic> updatedData, {
+    XFile? profileImage,
+    List<XFile>? portfolioImages,
+    XFile? certificateFile,
+  }) async {
+    final token = await _getToken();
+    if (token == null) throw Exception('No token found');
+
+    final uri = Uri.parse('$baseUrl/$specialistId/profile');
+    final request = http.MultipartRequest('PUT', uri);
+    request.headers['Authorization'] = 'Bearer $token';
+
+    updatedData.forEach((key, value) {
+      if (value == null) return;
+      if (value is List) {
+        request.fields[key] = jsonEncode(value);
+      } else {
+        request.fields[key] = value.toString();
+      }
+    });
+
+    Future<void> addFileField(String field, XFile file) async {
+      if (kIsWeb) {
+        final bytes = await file.readAsBytes();
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            field,
+            bytes,
+            filename: file.name,
+          ),
+        );
+      } else {
+        request.files.add(await http.MultipartFile.fromPath(field, file.path));
+      }
+    }
+
+    if (profileImage != null) {
+      await addFileField('profile_image', profileImage);
+    }
+
+    if (certificateFile != null) {
+      await addFileField('certificate_file', certificateFile);
+    }
+
+    if (portfolioImages != null && portfolioImages.isNotEmpty) {
+      for (final image in portfolioImages) {
+        await addFileField('portfolio_images', image);
+      }
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update specialist profile: ${response.statusCode}');
     }
   }
 }

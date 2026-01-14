@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:puremood_frontend/utils/io_utils.dart';
 import 'package:puremood_frontend/utils/image_provider_utils.dart';
 import '../models/specialist.dart';
 import '../services/specialist_service.dart';
@@ -25,9 +24,9 @@ class _SpecialistOwnProfileScreenState extends State<SpecialistOwnProfileScreen>
   bool _isLoading = true;
   bool _isSaving = false;
   Specialist? _specialist;
-  File? _profileImageFile;
-  List<File> _portfolioImages = [];
-  File? _certificateFile;
+  XFile? _profileImageFile;
+  List<XFile> _portfolioImages = [];
+  XFile? _certificateFile;
 
   // Rating & reviews
   double _currentRating = 0;
@@ -63,7 +62,7 @@ class _SpecialistOwnProfileScreenState extends State<SpecialistOwnProfileScreen>
 
       if (file != null) {
         setState(() {
-          _certificateFile = File(file.path);
+          _certificateFile = file;
         });
       }
     } catch (e) {
@@ -135,7 +134,7 @@ class _SpecialistOwnProfileScreenState extends State<SpecialistOwnProfileScreen>
       
       if (image != null) {
         setState(() {
-          _profileImageFile = File(image.path);
+          _profileImageFile = image;
         });
       }
     } catch (e) {
@@ -153,7 +152,7 @@ class _SpecialistOwnProfileScreenState extends State<SpecialistOwnProfileScreen>
       
       if (images.isNotEmpty) {
         setState(() {
-          _portfolioImages.addAll(images.map((xFile) => File(xFile.path)));
+          _portfolioImages.addAll(images);
         });
       }
     } catch (e) {
@@ -306,7 +305,7 @@ class _SpecialistOwnProfileScreenState extends State<SpecialistOwnProfileScreen>
           Text(
             hasCertificate
                 ? (_certificateFile != null
-                    ? 'Selected file: ${_certificateFile!.path.split('/').last}'
+                    ? 'Selected file: ${_certificateFile!.name}'
                     : existingName)
                 : existingName,
             style:
@@ -438,7 +437,7 @@ class _SpecialistOwnProfileScreenState extends State<SpecialistOwnProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Text(

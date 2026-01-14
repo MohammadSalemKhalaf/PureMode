@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:puremood_frontend/services/admin_service.dart';
 
@@ -162,7 +163,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
 
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: isDark ? Color(0xFF0A0F1C) : Color(0xFFF8FAFF),
       appBar: AppBar(
         title: Text(
@@ -217,8 +218,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
   Widget _buildHeaderStats(bool isDark) {
     final totalUsers = users.length;
-    final pendingUsers = users.where((user) => user['status'] == 'pending').length;
     final activeUsers = users.where((user) => user['status'] == 'accepted').length;
+    final specialistUsers = users.where((user) => user['role'] == 'specialist').length;
 
     return Container(
       margin: EdgeInsets.all(16), // ← الإصلاح 2: تقليل الـ margin
@@ -245,8 +246,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildStatItem(Icons.people_alt_rounded, totalUsers, 'Total Users', Colors.white),
-          _buildStatItem(Icons.pending_actions_rounded, pendingUsers, 'Pending', Colors.orange.shade200),
           _buildStatItem(Icons.verified_rounded, activeUsers, 'Active', Colors.green.shade200),
+          _buildStatItem(Icons.medical_services_rounded, specialistUsers, 'Specialists', Colors.teal.shade200),
         ],
       ),
     );
@@ -352,7 +353,6 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   items: [
                     DropdownMenuItem(value: null, child: Text('All Status', style: GoogleFonts.poppins())),
                     DropdownMenuItem(value: 'accepted', child: Text('Accepted', style: GoogleFonts.poppins())),
-                    DropdownMenuItem(value: 'pending', child: Text('Pending', style: GoogleFonts.poppins())),
                     DropdownMenuItem(value: 'rejected', child: Text('Rejected', style: GoogleFonts.poppins())),
                   ],
                   hint: 'Filter by Status',
@@ -681,42 +681,20 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           value: 'view',
           child: Row(
             children: [
-              Icon(Icons.visibility_outlined, size: 18, color: Colors.blue), // ← الإصلاح 60: تقليل حجم الأيقونة
-              SizedBox(width: 6), // ← الإصلاح 61: تقليل المسافة
-              Text('View Details', style: GoogleFonts.poppins(fontSize: 12)), // ← الإصلاح 62: تقليل حجم الخط
+              Icon(Icons.visibility_outlined, size: 18, color: Colors.blue),
+              SizedBox(width: 6),
+              Text('View Details', style: GoogleFonts.poppins(fontSize: 12)),
             ],
           ),
         ),
-        if (user['status'] == 'pending') ...[
-          PopupMenuItem(
-            value: 'approve',
-            child: Row(
-              children: [
-                Icon(Icons.check_circle_outline, size: 18, color: Colors.green), // ← الإصلاح 63: تقليل حجم الأيقونة
-                SizedBox(width: 6), // ← الإصلاح 64: تقليل المسافة
-                Text('Approve', style: GoogleFonts.poppins(fontSize: 12)), // ← الإصلاح 65: تقليل حجم الخط
-              ],
-            ),
-          ),
-          PopupMenuItem(
-            value: 'reject',
-            child: Row(
-              children: [
-                Icon(Icons.cancel_outlined, size: 18, color: Colors.red), // ← الإصلاح 66: تقليل حجم الأيقونة
-                SizedBox(width: 6), // ← الإصلاح 67: تقليل المسافة
-                Text('Reject', style: GoogleFonts.poppins(fontSize: 12)), // ← الإصلاح 68: تقليل حجم الخط
-              ],
-            ),
-          ),
-        ],
         PopupMenuDivider(),
         PopupMenuItem(
           value: 'change_role',
           child: Row(
             children: [
-              Icon(Icons.swap_horiz_rounded, size: 18, color: Colors.purple), // ← الإصلاح 69: تقليل حجم الأيقونة
-              SizedBox(width: 6), // ← الإصلاح 70: تقليل المسافة
-              Text('Change Role', style: GoogleFonts.poppins(fontSize: 12)), // ← الإصلاح 71: تقليل حجم الخط
+              Icon(Icons.swap_horiz_rounded, size: 18, color: Colors.purple),
+              SizedBox(width: 6),
+              Text('Change Role', style: GoogleFonts.poppins(fontSize: 12)),
             ],
           ),
         ),
@@ -725,9 +703,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           value: 'delete',
           child: Row(
             children: [
-              Icon(Icons.delete_outline, size: 18, color: Colors.red), // ← الإصلاح 72: تقليل حجم الأيقونة
-              SizedBox(width: 6), // ← الإصلاح 73: تقليل المسافة
-              Text('Delete User', style: GoogleFonts.poppins(fontSize: 12, color: Colors.red)), // ← الإصلاح 74: تقليل حجم الخط
+              Icon(Icons.delete_outline, size: 18, color: Colors.red),
+              SizedBox(width: 6),
+              Text('Delete User', style: GoogleFonts.poppins(fontSize: 12, color: Colors.red)),
             ],
           ),
         ),
@@ -736,12 +714,6 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         switch (value) {
           case 'view':
             _showUserDetails(user['user_id']);
-            break;
-          case 'approve':
-            _updateUserStatus(user['user_id'], 'accepted');
-            break;
-          case 'reject':
-            _updateUserStatus(user['user_id'], 'rejected');
             break;
           case 'change_role':
             await _showRoleChangeDialog(user);
@@ -832,8 +804,6 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     switch (status) {
       case 'accepted':
         return Color(0xFF10B981);
-      case 'pending':
-        return Color(0xFFF59E0B);
       case 'rejected':
         return Color(0xFFEF4444);
       default:
@@ -903,7 +873,7 @@ class _AdminUserDetailsScreenState extends State<AdminUserDetailsScreen> {
     final user = userDetails['user'] ?? {};
     final stats = userDetails['statistics'] ?? {};
 
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: isDark ? Color(0xFF0A0F1C) : Color(0xFFF8FAFF),
       appBar: AppBar(
         title: Text(
@@ -1248,8 +1218,6 @@ class _AdminUserDetailsScreenState extends State<AdminUserDetailsScreen> {
     switch (status) {
       case 'accepted':
         return Color(0xFF10B981);
-      case 'pending':
-        return Color(0xFFF59E0B);
       case 'rejected':
         return Color(0xFFEF4444);
       default:

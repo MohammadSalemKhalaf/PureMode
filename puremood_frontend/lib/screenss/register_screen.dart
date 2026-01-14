@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:puremood_frontend/utils/io_utils.dart';
 import 'package:puremood_frontend/services/api_service.dart';
 import 'package:puremood_frontend/services/email_verification_service.dart';
 import 'package:puremood_frontend/screenss/email_verification_screen.dart';
@@ -28,7 +28,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final educationController = TextEditingController();
   final sessionPriceController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
-  File? _specialistCertificateFile;
+  XFile? _specialistCertificateFile;
   
   final api = ApiService();
   final emailService = EmailVerificationService();
@@ -172,7 +172,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (file != null) {
         setState(() {
-          _specialistCertificateFile = File(file.path);
+          _specialistCertificateFile = file;
         });
       }
     } catch (e) {
@@ -190,8 +190,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: const Color(0xFFEFF5F5),
+      webMaxWidth: 720,
       appBar: AppBar(
         title: Text('Create Account',
             style: GoogleFonts.poppins(
@@ -204,7 +205,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         padding: const EdgeInsets.all(20),
         child: SingleChildScrollView(
           child: Column(
-            children: [
+              children: [
               Text(
                 "Join PureMood Today!",
                 style: GoogleFonts.poppins(
@@ -283,8 +284,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 const SizedBox(height: 4),
                                 Text(
                                   _specialistCertificateFile != null
-                                      ? 'Selected file: '
-                                          '${_specialistCertificateFile!.path.split('/').last}'
+                                      ? 'Selected file: ${_specialistCertificateFile!.name}'
                                       : 'Please upload your professional certificate.',
                                   style: GoogleFonts.poppins(
                                     fontSize: 12,
@@ -355,8 +355,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       fontWeight: FontWeight.w500),
                 ),
               )
-            ],
-          ),
+              ],
+            ),
         ),
       ),
     );

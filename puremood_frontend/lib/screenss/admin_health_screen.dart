@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:puremood_frontend/services/admin_service.dart';
 
@@ -157,7 +158,7 @@ class _AdminHealthScreenState extends State<AdminHealthScreen> {
     final status = healthData['status'] ?? 'unknown';
     final isHealthy = status == 'healthy';
 
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: isDark ? Color(0xFF0F172A) : Color(0xFFF8FAFC),
       appBar: AppBar(
         title: Text(

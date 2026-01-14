@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/booking.dart';
@@ -261,7 +262,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: Text(

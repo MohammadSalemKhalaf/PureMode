@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:puremood_frontend/services/api_service.dart';
 
@@ -120,8 +121,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: const Color(0xFFEFF5F5),
+      webMaxWidth: 640,
       appBar: AppBar(
         title: Text(
           'Forgot Password',
@@ -134,10 +136,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         centerTitle: true,
         elevation: 0,
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -261,7 +262,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
             ],
           ),
-        ),
       ),
     );
   }

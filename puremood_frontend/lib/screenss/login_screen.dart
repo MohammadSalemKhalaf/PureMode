@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 import 'DashboardScreen.dart';
@@ -75,12 +76,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: const Color(0xfff4faf8),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
-          child: Column(
+      webMaxWidth: 520,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
+        child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.spa_rounded, size: 80, color: Colors.teal.shade400),
@@ -229,7 +230,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ],
           ),
-        ),
       ),
     );
   }

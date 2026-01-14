@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/assessment_service.dart';
 import '../models/assessment_models.dart';
@@ -444,7 +445,7 @@ class _AssessmentTestScreenState extends State<AssessmentTestScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
+      return WebScaffold(
         appBar: AppBar(
           title: Text(widget.assessmentTitle),
           backgroundColor: const Color(0xFF00A79D),
@@ -465,7 +466,7 @@ class _AssessmentTestScreenState extends State<AssessmentTestScreen> {
     }
 
     if (_error.isNotEmpty) {
-      return Scaffold(
+      return WebScaffold(
         appBar: AppBar(
           title: Text(widget.assessmentTitle),
           backgroundColor: const Color(0xFF00A79D),
@@ -497,7 +498,7 @@ class _AssessmentTestScreenState extends State<AssessmentTestScreen> {
     }
 
     if (_questions.isEmpty) {
-      return Scaffold(
+      return WebScaffold(
         appBar: AppBar(
           title: Text(widget.assessmentTitle),
           backgroundColor: const Color(0xFF00A79D),
@@ -522,7 +523,7 @@ class _AssessmentTestScreenState extends State<AssessmentTestScreen> {
     final currentQuestion = _questions[_currentQuestionIndex];
     final progress = (_currentQuestionIndex + 1) / _questions.length;
 
-    return Scaffold(
+    return WebScaffold(
       appBar: AppBar(
         title: Text(widget.assessmentTitle),
         backgroundColor: const Color(0xFF00A79D),

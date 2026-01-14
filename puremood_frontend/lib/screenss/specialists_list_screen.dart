@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/specialist.dart';
 import '../services/specialist_service.dart';
@@ -121,7 +122,7 @@ class _SpecialistsListScreenState extends State<SpecialistsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       appBar: AppBar(
         title: Text(
           'Mental Health Specialists',

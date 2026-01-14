@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:puremood_frontend/utils/io_utils.dart';
 import 'package:puremood_frontend/services/api_service.dart';
 import 'package:puremood_frontend/screenss/admin_edit_profile_screen.dart';
@@ -35,15 +37,18 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
 
       if (pickedFile == null) return;
 
-      final file = File(pickedFile.path);
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Uploading profile picture...'),
         ),
       );
 
-      await _apiService.uploadProfilePicture(file);
+      if (kIsWeb) {
+        await _apiService.uploadProfilePictureXFile(pickedFile);
+      } else {
+        final file = File(pickedFile.path);
+        await _apiService.uploadProfilePicture(file);
+      }
 
       await _loadUserInfo();
 
@@ -81,7 +86,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
 
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: isDark ? Color(0xFF0A0F1C) : Color(0xFFF8FAFF),
       body: loading
           ? _buildLoadingState(isDark)

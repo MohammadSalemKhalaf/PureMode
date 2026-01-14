@@ -1,5 +1,6 @@
 // lib/screenss/dashboard_screen.dart
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -2229,7 +2230,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/mood_models.dart';
 import '../services/recommendation_service.dart';
@@ -591,7 +592,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: Color(0xFFE8F5F3),
       appBar: AppBar(
         backgroundColor: _getMoodColor(),

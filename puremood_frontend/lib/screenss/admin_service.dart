@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:puremood_frontend/config/api_config.dart';

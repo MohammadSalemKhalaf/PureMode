@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:puremood_frontend/services/admin_service.dart';
 import 'package:puremood_frontend/services/api_service.dart';
@@ -155,7 +156,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
 
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: isDark ? Color(0xFF0A0F1C) : Color(0xFFF8FAFF),
       appBar: AppBar(
         title: Text(
@@ -520,12 +521,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         // ØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ø£ÙŠÙ‚ÙˆÙ†Ø© ÙˆØ§Ù„Ù„ÙˆÙ† Ø­Ø³Ø¨ Ù†ÙˆØ¹ Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±
         IconData icon = Icons.notifications_outlined;
         Color color = Colors.grey;
-        String route = '/admin/pending';
+        String route = '/admin/users';
 
         if (type == 'new_user_pending') {
           icon = Icons.person_add_outlined;
           color = Color(0xFF4361EE);
-          route = '/admin/pending';
+          route = '/admin/users';
         } else if (type == 'new_post') {
           icon = Icons.article_outlined;
           color = Color(0xFF4CAF50);
@@ -977,12 +978,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             SizedBox(width: 16),
             Expanded(
               child: _buildMainStatCard(
-                title: 'Pending',
-                value: stats['pendingUsers'] ?? 0,
-                icon: Icons.pending_actions_rounded,
-                color: Color(0xFFFF9F1C),
-                subtitle: 'Awaiting approval',
-                trend: '${stats['pendingUsers'] ?? 0} new',
+                title: 'Specialists',
+                value: stats['totalSpecialists'] ?? 0,
+                icon: Icons.medical_services_rounded,
+                color: Color(0xFF009688),
+                subtitle: 'Verified specialists',
+                trend: '${stats['totalSpecialists'] ?? 0} total',
               ),
             ),
           ],
@@ -1192,19 +1193,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildQuickActions(bool isDark) {
-    final pendingCount = stats['pendingUsers'] ?? 0;
-
     return Column(
       children: [
-        _buildActionTile(
-          title: 'Pending Approvals',
-          subtitle: 'Review user registrations',
-          icon: Icons.pending_actions_rounded,
-          iconColor: Color(0xFFFF9F1C),
-          onTap: () => Navigator.pushNamed(context, '/admin/pending'),
-          badge: pendingCount > 0 ? pendingCount : null,
-        ),
-        SizedBox(height: 12),
         _buildActionTile(
           title: 'Manage Users',
           subtitle: 'View and manage all users',

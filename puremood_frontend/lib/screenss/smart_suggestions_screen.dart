@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/mood_service.dart';
 import '../services/smart_suggestions_service.dart';
@@ -535,7 +536,7 @@ class _SmartSuggestionsScreenState extends State<SmartSuggestionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: Color(0xFFF0F4F8),
       appBar: AppBar(
         title: Text('Personalized Suggestions',

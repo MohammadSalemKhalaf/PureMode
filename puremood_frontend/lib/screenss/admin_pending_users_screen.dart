@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:puremood_frontend/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -134,7 +135,7 @@ class _AdminPendingUsersScreenState extends State<AdminPendingUsersScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: isDark ? Color(0xFF121212) : const Color(0xFFF3F9F8),
       appBar: AppBar(
         title: Text(

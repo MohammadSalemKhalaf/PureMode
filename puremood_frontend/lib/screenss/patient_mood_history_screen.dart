@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../services/specialist_service.dart';
@@ -60,7 +61,7 @@ class _PatientMoodHistoryScreenState extends State<PatientMoodHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Text(

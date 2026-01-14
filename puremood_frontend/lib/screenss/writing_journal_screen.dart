@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/mood_models.dart';
 import '../services/recommendation_service.dart';
@@ -113,7 +114,7 @@ class _WritingJournalScreenState extends State<WritingJournalScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: Color(0xFFFFF8E1),
       appBar: AppBar(
         backgroundColor: Colors.amber.shade700,

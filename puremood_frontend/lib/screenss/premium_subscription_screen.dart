@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/user_subscription_service.dart';
 
@@ -49,7 +50,7 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: Color(0xFF1A1A2E),
       body: SafeArea(
         child: SingleChildScrollView(

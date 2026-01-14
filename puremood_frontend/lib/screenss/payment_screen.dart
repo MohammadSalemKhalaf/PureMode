@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:puremood_frontend/utils/stripe_web_helper.dart';
+import 'package:puremood_frontend/widgets/stripe_card_element.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import '../services/payment_service.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -29,11 +32,48 @@ class _PaymentScreenState extends State<PaymentScreen> {
   bool _isProcessing = false;
   String? _errorMessage;
   CardFieldInputDetails? _cardDetails;
+  bool _webStripeReady = false;
+  String? _webStripeError;
+
+  @override
+  void initState() {
+    super.initState();
+    if (kIsWeb) {
+      _initWebStripe();
+    }
+  }
+
+  Future<void> _initWebStripe() async {
+    try {
+      setState(() {
+        _webStripeReady = false;
+        _webStripeError = null;
+      });
+      await StripeWebHelper.initialize();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _webStripeReady = true;
+        _webStripeError = null;
+      });
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      final message = e.toString().replaceAll('Exception: ', '');
+      setState(() {
+        _webStripeReady = false;
+        _webStripeError = 'Payment form failed to load: $message';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: Colors.grey[50],
+      webMaxWidth: 960,
       appBar: AppBar(
         title: Text(
           'Payment',
@@ -47,47 +87,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Web warning banner
-            if (kIsWeb) ...[
-              Container(
-                padding: EdgeInsets.all(16),
-                margin: EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.orange[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange[300]!),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, color: Colors.orange[700], size: 28),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Notice',
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.orange[900],
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Payment is only available on mobile app (iOS/Android)',
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              color: Colors.orange[800],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
             _buildBookingSummary(),
             SizedBox(height: 24),
             _buildPaymentMethod(),
@@ -176,6 +175,88 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Widget _buildPaymentMethod() {
+    if (kIsWeb) {
+      return Container(
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 5,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.payment, color: Color(0xFF008080), size: 24),
+                SizedBox(width: 12),
+                Text(
+                  'Payment Method',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Card Details',
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 8),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: StripeCardElement(
+                enabled: _webStripeReady,
+                height: 64,
+              ),
+            ),
+            if (!_webStripeReady && _webStripeError == null) ...[
+              SizedBox(height: 8),
+              Text(
+                'Loading secure card form...',
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+            if (_webStripeError != null) ...[
+              SizedBox(height: 12),
+              _buildInlineWarning(_webStripeError!),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _initWebStripe,
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: Text(
+                    'Retry loading payment form',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -373,6 +454,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Widget _buildPaymentButton() {
+    final isWebDisabled = kIsWeb && !_webStripeReady;
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -387,7 +469,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       ),
       child: SafeArea(
         child: ElevatedButton(
-          onPressed: _isProcessing ? null : _processPayment,
+          onPressed: (_isProcessing || isWebDisabled) ? null : _processPayment,
           style: ElevatedButton.styleFrom(
             backgroundColor: Color(0xFF008080),
             padding: EdgeInsets.symmetric(vertical: 16),
@@ -439,16 +521,54 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Future<void> _processPayment() async {
-    // Check if running on web - Stripe payment not supported on web yet
     if (kIsWeb) {
+      await _processWebPayment();
+    } else {
+      await _processMobilePayment();
+    }
+  }
+
+  Future<void> _processWebPayment() async {
+    if (!_webStripeReady) {
       setState(() {
-        _errorMessage = 'Payment is only available on mobile app (iOS/Android). Please use the mobile app to complete your payment.';
-        _isProcessing = false;
+        _errorMessage = 'Payment form is still loading. Please wait a moment.';
       });
       return;
     }
 
-    // Ensure card details are complete
+    setState(() {
+      _isProcessing = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final paymentData = await _paymentService.createPaymentIntent(widget.bookingId);
+      final clientSecret = paymentData['clientSecret'];
+      final paymentIntentId = clientSecret.split('_secret_')[0];
+
+      final errorMessage = await StripeWebHelper.confirmPayment(clientSecret);
+      if (errorMessage != null) {
+        throw Exception(errorMessage);
+      }
+
+      await _paymentService.confirmPaymentSuccess(
+        bookingId: widget.bookingId,
+        paymentIntentId: paymentIntentId,
+      );
+
+      _showSuccessDialog();
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString().replaceAll('Exception: ', '');
+      });
+    } finally {
+      setState(() {
+        _isProcessing = false;
+      });
+    }
+  }
+
+  Future<void> _processMobilePayment() async {
     if (_cardDetails == null || !_cardDetails!.complete) {
       setState(() {
         _errorMessage = 'Please enter complete card details.';
@@ -462,16 +582,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
     });
 
     try {
-      // 1) Create payment intent on backend
-      print('📤 Creating payment intent for booking ${widget.bookingId}...');
+      print('Creating payment intent for booking ${widget.bookingId}...');
       final paymentData = await _paymentService.createPaymentIntent(widget.bookingId);
 
       final clientSecret = paymentData['clientSecret'];
-      final paymentIntentId = clientSecret.split('_secret_')[0]; // Extract payment intent ID
+      final paymentIntentId = clientSecret.split('_secret_')[0];
 
-      print('✅ Payment intent created: $paymentIntentId');
+      print('Payment intent created: $paymentIntentId');
 
-      // 2) Confirm payment using custom in-screen card field (no Stripe sheet)
       await Stripe.instance.confirmPayment(
         paymentIntentClientSecret: clientSecret,
         data: PaymentMethodParams.card(
@@ -479,19 +597,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
         ),
       );
 
-      print('✅ Payment confirmed via custom UI!');
+      print('Payment confirmed via custom UI');
 
-      // 3) Confirm payment on backend
       await _paymentService.confirmPaymentSuccess(
         bookingId: widget.bookingId,
         paymentIntentId: paymentIntentId,
       );
 
-      // 4) Show success and navigate back
       _showSuccessDialog();
-
     } catch (e) {
-      print('❌ Payment error: $e');
+      print('Payment error: $e');
       setState(() {
         _errorMessage = e.toString().replaceAll('Exception: ', '');
       });
@@ -500,6 +615,32 @@ class _PaymentScreenState extends State<PaymentScreen> {
         _isProcessing = false;
       });
     }
+  }
+
+  Widget _buildInlineWarning(String message) {
+    return Container(
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.orange[50],
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.orange[200]!),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline, color: Colors.orange[700]),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: Colors.orange[800],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showSuccessDialog() {
@@ -542,3 +683,4 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 }
+

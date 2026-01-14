@@ -83,6 +83,7 @@ router.put('/me', verifyToken, updateUser);
 
 // 🖼️ تحديث صورة البروفايل (ملف من الجهاز)
 router.put('/me/picture', verifyToken, uploadProfile.single('picture'), updateUser);
+router.post('/me/picture', verifyToken, uploadProfile.single('picture'), updateUser);
 
 // =====================================================
 //                     ADMIN ROUTES

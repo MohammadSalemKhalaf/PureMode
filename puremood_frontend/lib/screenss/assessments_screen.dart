@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'assessment_test_screen.dart';
 import '../models/assessment_models.dart';
@@ -58,7 +59,7 @@ class AssessmentsScreen extends StatelessWidget {
       },
     ];
 
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: const Color(0xfff3f9f8),
       appBar: AppBar(
         backgroundColor: const Color(0xFF00A79D),

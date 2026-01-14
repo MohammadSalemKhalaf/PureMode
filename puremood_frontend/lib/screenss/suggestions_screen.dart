@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:puremood_frontend/widgets/web_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SuggestionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WebScaffold(
       backgroundColor: const Color(0xFFEFF5F5),
       appBar: AppBar(
         title: Text('Wellness Suggestions', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.white)),
